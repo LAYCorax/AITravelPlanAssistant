@@ -1,0 +1,182 @@
+.voice-recorder {
+  padding: 24px;
+}
+
+.recorder-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.recorder-idle,
+.recorder-recording,
+.recorder-processing,
+.recorder-completed {
+  text-align: center;
+  padding: 32px;
+}
+
+.record-button {
+  width: 80px !important;
+  height: 80px !important;
+  font-size: 36px !important;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  transition: all 0.3s;
+}
+
+.record-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+}
+
+.recorder-recording {
+  width: 100%;
+}
+
+.audio-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 80px;
+  margin-bottom: 16px;
+}
+
+.wave-bar {
+  width: 8px;
+  background: linear-gradient(180deg, #1890ff 0%, #096dd9 100%);
+  border-radius: 4px;
+  transition: height 0.1s ease-in-out;
+  animation: wave 1s ease-in-out infinite;
+}
+
+.wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.wave-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.wave-bar:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+@keyframes wave {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.recording-time {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.stop-button {
+  width: 60px !important;
+  height: 60px !important;
+  font-size: 14px !important;
+}
+
+.recorder-processing {
+  width: 100%;
+}
+
+.recorder-processing p {
+  margin: 16px 0;
+  font-size: 16px;
+  color: #595959;
+}
+
+.recorder-completed .success-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #52c41a;
+  color: white;
+  font-size: 48px;
+  line-height: 80px;
+  margin: 0 auto 16px;
+  animation: scaleIn 0.3s ease-in-out;
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.recorder-completed p {
+  font-size: 18px;
+  color: #52c41a;
+  font-weight: bold;
+}
+
+.recorder-tips {
+  background: #f0f2f5;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.recorder-tips p {
+  margin: 0 0 8px 0;
+  font-weight: bold;
+  color: #262626;
+}
+
+.recorder-tips ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #595959;
+}
+
+.recorder-tips li {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 768px) {
+  .voice-recorder {
+    padding: 16px;
+  }
+
+  .recorder-container {
+    min-height: 250px;
+  }
+
+  .record-button {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 28px !important;
+  }
+
+  .audio-wave {
+    height: 60px;
+  }
+
+  .recording-time {
+    font-size: 20px;
+  }
+
+  .stop-button {
+    width: 50px !important;
+    height: 50px !important;
+  }
+}

@@ -8,6 +8,8 @@ import { AuthLayout, MainLayout } from './layouts';
 import { Login } from './pages/Auth/Login';
 import { Register } from './pages/Auth/Register';
 import { Home } from './pages/Home/Home';
+import { PlannerInput } from './pages/TravelPlanner/PlannerInput';
+import { MyPlans } from './pages/MyPlans/MyPlans';
 import './App.css';
 
 function App() {
@@ -33,8 +35,8 @@ function App() {
               }
             >
               <Route index element={<Home />} />
-              <Route path="planner" element={<div>规划页面（待开发）</div>} />
-              <Route path="plans" element={<div>计划列表（待开发）</div>} />
+              <Route path="planner" element={<PlannerInput />} />
+              <Route path="plans" element={<MyPlans />} />
               <Route path="plans/:id" element={<div>计划详情（待开发）</div>} />
               <Route path="settings" element={<div>设置页面（待开发）</div>} />
             </Route>

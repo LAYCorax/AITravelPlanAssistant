@@ -1,0 +1,89 @@
+.planner-input-page {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.planner-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.planner-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.planner-header h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #262626;
+}
+
+.planner-header p {
+  font-size: 16px;
+  color: #8c8c8c;
+  margin: 0;
+}
+
+.voice-input-container {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.voice-placeholder {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.voice-icon {
+  font-size: 72px;
+  color: #1890ff;
+  margin-bottom: 24px;
+}
+
+.voice-placeholder h3 {
+  font-size: 24px;
+  margin-bottom: 12px;
+  color: #262626;
+}
+
+.voice-placeholder p {
+  font-size: 16px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.voice-hint {
+  color: #1890ff !important;
+  font-style: italic;
+}
+
+.voice-note {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #ff7a45;
+}
+
+@media (max-width: 768px) {
+  .planner-input-page {
+    padding: 0;
+  }
+
+  .planner-header h2 {
+    font-size: 22px;
+  }
+
+  .planner-header p {
+    font-size: 14px;
+  }
+
+  .voice-icon {
+    font-size: 56px;
+  }
+
+  .voice-placeholder h3 {
+    font-size: 20px;
+  }
+}
