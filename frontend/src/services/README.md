@@ -14,7 +14,7 @@ services/
 ├── llm/
 │   └── alibabaLLM.ts     # Alibaba LLM integration
 ├── voice/
-│   └── iflytek.ts        # iFlytek voice recognition
+│   └── iflytek.ts        # iFlytek WebSocket voice recognition (流式版)
 ├── map/
 │   └── amap.ts           # Amap (Gaode) map service
 ├── supabase/

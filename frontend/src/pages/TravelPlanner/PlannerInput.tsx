@@ -7,6 +7,7 @@ import type { CreateTravelPlanInput } from '../../types';
 import { VoiceRecorder } from '../../components/voice/VoiceRecorder';
 import { generateTripPlan, checkLLMConfig } from '../../services/ai/llm';
 import { saveTravelPlan } from '../../services/api/travelPlans';
+import { voiceService } from '../../services/voice/iflytek';
 import './PlannerInput.css';
 
 const { RangePicker } = DatePicker;
@@ -123,10 +124,74 @@ export function PlannerInput() {
     message.info('请点击麦克风按钮开始语音输入');
   };
 
-  const handleTranscriptComplete = (text: string) => {
-    message.success(`识别结果: ${text}`);
-    // TODO: 解析语音文本并填充表单
-    // 或直接使用语音文本创建计划
+  const handleTranscriptComplete = async (text: string) => {
+    // 显示识别结果并让用户确认
+    Modal.confirm({
+      title: '语音识别完成',
+      content: (
+        <div>
+          <p><strong>您的需求：</strong></p>
+          <p style={{ padding: '10px', background: '#f5f5f5', borderRadius: '4px', marginTop: '10px' }}>
+            {text}
+          </p>
+          <p style={{ marginTop: '15px', color: '#666' }}>
+            确认后，AI将根据您的口述需求生成旅行计划。
+          </p>
+        </div>
+      ),
+      okText: '确认并生成计划',
+      cancelText: '重新录制',
+      width: 500,
+      onOk: async () => {
+        try {
+          setLoading(true);
+          setGeneratingPlan(true);
+          
+          // 检查LLM配置
+          const llmConfig = checkLLMConfig();
+          if (!llmConfig.configured) {
+            message.error(llmConfig.message);
+            return;
+          }
+
+          message.loading({ content: '正在为您生成旅行计划...', key: 'generating', duration: 0 });
+
+          // 直接使用语音输入生成旅行计划
+          const { generateTripPlanFromVoice } = await import('../../services/ai/llm');
+          const result = await generateTripPlanFromVoice(text);
+
+          message.destroy('generating');
+
+          if (!result.success) {
+            throw new Error(result.error || 'AI生成失败');
+          }
+
+          // 保存AI生成的完整计划
+          const saveResult = await saveTravelPlan(result.plan!, result.itinerary!);
+
+          if (!saveResult.success) {
+            throw new Error(saveResult.error || '保存计划失败');
+          }
+
+          message.success('旅行计划生成成功！');
+          
+          // 跳转到计划详情页
+          setTimeout(() => {
+            navigate(`/plans/${saveResult.planId}`);
+          }, 500);
+          
+        } catch (error: any) {
+          message.error(error.message || '生成计划失败');
+          console.error('语音生成计划失败:', error);
+        } finally {
+          setLoading(false);
+          setGeneratingPlan(false);
+        }
+      },
+      onCancel: () => {
+        message.info('已取消，您可以重新录制');
+      },
+    });
   };
 
   const handleVoiceError = (error: Error) => {
