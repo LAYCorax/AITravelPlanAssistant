@@ -9,6 +9,7 @@ import { Login } from './pages/Auth/Login';
 import { Register } from './pages/Auth/Register';
 import { Home } from './pages/Home/Home';
 import { PlannerInput } from './pages/TravelPlanner/PlannerInput';
+import { PlanDetail } from './pages/TravelPlanner/PlanDetail';
 import { MyPlans } from './pages/MyPlans/MyPlans';
 import './App.css';
 
@@ -33,12 +34,12 @@ function App() {
                   <MainLayout />
                 </ProtectedRoute>
               }
-            >
               <Route index element={<Home />} />
               <Route path="planner" element={<PlannerInput />} />
               <Route path="plans" element={<MyPlans />} />
-              <Route path="plans/:id" element={<div>计划详情（待开发）</div>} />
+              <Route path="plans/:id" element={<PlanDetail />} />
               <Route path="settings" element={<div>设置页面（待开发）</div>} />
+            </Route> path="settings" element={<div>设置页面（待开发）</div>} />
             </Route>
 
             {/* 404 */}

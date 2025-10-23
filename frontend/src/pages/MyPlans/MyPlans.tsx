@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Empty, Button, Tag, Space, Spin, Input, Select } from 'antd';
+import { Card, Empty, Button, Tag, Space, Spin, Input, Select, message, Modal } from 'antd';
 import {
   PlusOutlined,
   CalendarOutlined,
@@ -8,9 +8,11 @@ import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { TravelPlan } from '../../types';
+import { getUserTravelPlans, deleteTravelPlan } from '../../services/api/travelPlans';
 import './MyPlans.css';
 
 const { Search } = Input;
@@ -29,16 +31,43 @@ export function MyPlans() {
   const loadPlans = async () => {
     try {
       setLoading(true);
-      // TODO: 调用API获取计划列表
-      // 模拟数据
-      setTimeout(() => {
-        setPlans([]);
-        setLoading(false);
-      }, 500);
+      const result = await getUserTravelPlans();
+      
+      if (result.success && result.plans) {
+        setPlans(result.plans);
+      } else {
+        message.error(result.error || '加载计划列表失败');
+      }
     } catch (error) {
       console.error('Failed to load plans:', error);
+      message.error('加载计划列表失败');
+    } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = (planId: string, title: string) => {
+    Modal.confirm({
+      title: '确认删除',
+      icon: <ExclamationCircleOutlined />,
+      content: `确定要删除计划"${title}"吗？此操作不可恢复。`,
+      okText: '确认删除',
+      okType: 'danger',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          const result = await deleteTravelPlan(planId);
+          if (result.success) {
+            message.success('删除成功');
+            loadPlans(); // 重新加载列表
+          } else {
+            message.error(result.error || '删除失败');
+          }
+        } catch (error) {
+          message.error('删除失败');
+        }
+      },
+    });
   };
 
   const getStatusTag = (status: string) => {
@@ -148,9 +177,7 @@ export function MyPlans() {
                   type="text"
                   danger
                   icon={<DeleteOutlined />}
-                  onClick={() => {
-                    // TODO: 删除确认
-                  }}
+                  onClick={() => handleDelete(plan.id, plan.title)}
                 >
                   删除
                 </Button>,

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Form, Input, DatePicker, InputNumber, Button, Card, Space, message, Tabs } from 'antd';
-import { AudioOutlined, FormOutlined, CompassOutlined } from '@ant-design/icons';
+import { Form, Input, DatePicker, InputNumber, Button, Card, Space, message, Tabs, Modal, Spin } from 'antd';
+import { AudioOutlined, FormOutlined, CompassOutlined, LoadingOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import type { CreateTravelPlanInput } from '../../types';
 import { VoiceRecorder } from '../../components/voice/VoiceRecorder';
+import { generateTripPlan, checkLLMConfig } from '../../services/ai/llm';
+import { saveTravelPlan } from '../../services/api/travelPlans';
 import './PlannerInput.css';
 
 const { RangePicker } = DatePicker;
@@ -23,40 +25,102 @@ export function PlannerInput() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'voice' | 'manual'>('manual');
+  const [generatingPlan, setGeneratingPlan] = useState(false);
 
   const handleManualSubmit = async (values: PlanFormValues) => {
     try {
       setLoading(true);
       
-      const planData: CreateTravelPlanInput = {
-        destination: values.destination,
-        start_date: values.dateRange[0].format('YYYY-MM-DD'),
-        end_date: values.dateRange[1].format('YYYY-MM-DD'),
-        budget: values.budget,
-        traveler_count: values.travelerCount,
-        input_method: 'text',
-        original_input: values.description || `${values.destination}旅行，${values.travelerCount}人，预算${values.budget}元`,
-      };
+      // 检查LLM配置
+      const llmConfig = checkLLMConfig();
+      if (!llmConfig.configured) {
+        Modal.confirm({
+          title: '未配置AI服务',
+          content: llmConfig.message + '。是否跳过AI生成，直接创建计划？',
+          okText: '直接创建',
+          cancelText: '去设置',
+          onOk: async () => {
+            // 直接保存基础计划信息（不生成AI行程）
+            await saveBasicPlan(values);
+          },
+          onCancel: () => {
+            // TODO: 跳转到设置页面
+            message.info('请前往设置页面配置API密钥');
+          },
+        });
+        return;
+      }
 
-      console.log('Plan data:', planData);
+      // 使用AI生成旅行计划
+      setGeneratingPlan(true);
+      message.loading({ content: '正在为您生成旅行计划...', key: 'generating', duration: 0 });
+
+      const result = await generateTripPlan({
+        destination: values.destination,
+        startDate: values.dateRange[0].format('YYYY-MM-DD'),
+        endDate: values.dateRange[1].format('YYYY-MM-DD'),
+        budget: values.budget,
+        travelerCount: values.travelerCount,
+        additionalRequirements: values.description,
+      });
+
+      message.destroy('generating');
+
+      if (!result.success) {
+        throw new Error(result.error || 'AI生成失败');
+      }
+
+      // 保存AI生成的完整计划
+      const saveResult = await saveTravelPlan(result.plan!, result.itinerary!);
+
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || '保存计划失败');
+      }
+
+      message.success('旅行计划生成成功！');
       
-      // TODO: 调用API保存计划
-      message.success('计划创建成功！');
-      
-      // 暂时延迟，模拟API调用
+      // 跳转到计划详情页
       setTimeout(() => {
-        navigate('/plans');
-      }, 1000);
+        navigate(`/plans/${saveResult.planId}`);
+      }, 500);
       
     } catch (error: any) {
       message.error(error.message || '创建计划失败');
     } finally {
       setLoading(false);
+      setGeneratingPlan(false);
+    }
+  };
+
+  const saveBasicPlan = async (values: PlanFormValues) => {
+    try {
+      const planData = {
+        title: `${values.destination}旅行计划`,
+        destination: values.destination,
+        startDate: values.dateRange[0].format('YYYY-MM-DD'),
+        endDate: values.dateRange[1].format('YYYY-MM-DD'),
+        days: values.dateRange[1].diff(values.dateRange[0], 'day') + 1,
+        budget: values.budget,
+        travelerCount: values.travelerCount,
+        status: 'draft' as const,
+        description: values.description || `${values.destination}旅行，${values.travelerCount}人，预算${values.budget}元`,
+      };
+
+      const result = await saveTravelPlan(planData, []);
+      
+      if (!result.success) {
+        throw new Error(result.error || '保存失败');
+      }
+
+      message.success('基础计划创建成功！您可以稍后手动添加行程。');
+      navigate('/plans');
+    } catch (error: any) {
+      message.error(error.message || '保存失败');
     }
   };
 
   const handleVoiceInput = () => {
-    message.info('语音输入功能即将推出');
+    message.info('请点击麦克风按钮开始语音输入');
   };
 
   const handleTranscriptComplete = (text: string) => {
