@@ -69,7 +69,7 @@ export async function loadAmapScript(): Promise<void> {
     // 创建script标签
     const script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Driving,AMap.Geocoder,AMap.PlaceSearch`;
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Scale,AMap.ToolBar,AMap.ControlBar,AMap.Driving,AMap.Geocoder,AMap.PlaceSearch`;
     
     script.onload = () => {
       amapLoaded = true;

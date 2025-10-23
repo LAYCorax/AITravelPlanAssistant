@@ -75,10 +75,12 @@ export function MapView({
 
       mapInstanceRef.current = map;
 
-      // 添加控件
-      map.addControl(new window.AMap.Scale()); // 比例尺
-      map.addControl(new window.AMap.ToolBar()); // 工具条
-      map.addControl(new window.AMap.ControlBar()); // 3D控制器
+      // 添加控件（使用插件方式）
+      window.AMap.plugin(['AMap.Scale', 'AMap.ToolBar', 'AMap.ControlBar'], () => {
+        map.addControl(new window.AMap.Scale()); // 比例尺
+        map.addControl(new window.AMap.ToolBar()); // 工具条
+        map.addControl(new window.AMap.ControlBar()); // 3D控制器
+      });
 
       setLoading(false);
       updateMarkers();
