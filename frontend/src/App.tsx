@@ -34,12 +34,12 @@ function App() {
                   <MainLayout />
                 </ProtectedRoute>
               }
+            >
               <Route index element={<Home />} />
               <Route path="planner" element={<PlannerInput />} />
               <Route path="plans" element={<MyPlans />} />
               <Route path="plans/:id" element={<PlanDetail />} />
               <Route path="settings" element={<div>设置页面（待开发）</div>} />
-            </Route> path="settings" element={<div>设置页面（待开发）</div>} />
             </Route>
 
             {/* 404 */}
