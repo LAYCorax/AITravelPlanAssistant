@@ -12,6 +12,7 @@ import {
   message,
   Divider,
   Empty,
+  Tabs,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -24,9 +25,13 @@ import {
   HomeOutlined,
   CarOutlined,
   CoffeeOutlined,
+  EnvironmentFilled,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import { TravelPlan, ItineraryDetail } from '../../types';
 import { getTravelPlanById } from '../../services/api/travelPlans';
+import { MapView } from '../../components/map/MapView';
+import type { Location } from '../../services/map/amap';
 import dayjs from 'dayjs';
 import './PlanDetail.css';
 
@@ -38,6 +43,7 @@ export function PlanDetail() {
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<TravelPlan | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryDetail[]>([]);
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'map'>('itinerary');
 
   useEffect(() => {
     if (id) {
@@ -76,6 +82,46 @@ export function PlanDetail() {
     };
     const { color, text } = statusMap[status] || statusMap.draft;
     return <Tag color={color}>{text}</Tag>;
+  };
+
+  // 将行程详情转换为地图位置
+  const getMapLocations = (): Location[] => {
+    const locations: Location[] = [];
+    
+    itinerary.forEach(day => {
+      // 添加活动地点
+      if (day.activities && Array.isArray(day.activities)) {
+        day.activities.forEach((activity: any) => {
+          if (activity.coordinates && activity.coordinates.latitude && activity.coordinates.longitude) {
+            locations.push({
+              name: activity.name || '活动',
+              address: activity.address || activity.location,
+              coordinates: {
+                latitude: activity.coordinates.latitude,
+                longitude: activity.coordinates.longitude,
+              },
+              type: 'activity',
+              description: activity.description,
+            });
+          }
+        });
+      }
+
+      // 添加住宿地点
+      if (day.accommodation && day.accommodation.coordinates) {
+        locations.push({
+          name: day.accommodation.name || '住宿',
+          address: day.accommodation.address,
+          coordinates: {
+            latitude: day.accommodation.coordinates.latitude,
+            longitude: day.accommodation.coordinates.longitude,
+          },
+          type: 'accommodation',
+        });
+      }
+    });
+
+    return locations;
   };
 
   if (loading) {
@@ -165,15 +211,57 @@ export function PlanDetail() {
         </Space>
       </Card>
 
-      {/* Itinerary Section */}
+      {/* Tabs for Itinerary and Map */}
       {itinerary.length === 0 ? (
         <Card>
           <Empty description="暂无行程安排" />
         </Card>
       ) : (
-        <div className="itinerary-section">
-          {itinerary.map((day) => (
-            <Card key={day.id} className="day-card" title={`第${day.day}天 - ${day.title}`}>
+        <Card>
+          <Tabs
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as 'itinerary' | 'map')}
+            items={[
+              {
+                key: 'itinerary',
+                label: (
+                  <span>
+                    <UnorderedListOutlined /> 行程详情
+                  </span>
+                ),
+                children: <ItineraryView itinerary={itinerary} />,
+              },
+              {
+                key: 'map',
+                label: (
+                  <span>
+                    <EnvironmentFilled /> 地图展示
+                  </span>
+                ),
+                children: (
+                  <div style={{ marginTop: 16 }}>
+                    <MapView
+                      locations={getMapLocations()}
+                      showRoutes={true}
+                      height="600px"
+                    />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// 行程详情展示组件
+function ItineraryView({ itinerary }: { itinerary: ItineraryDetail[] }) {
+  return (
+    <div className="itinerary-section">
+      {itinerary.map((day) => (
+        <Card key={day.id} className="day-card" title={`第${day.day}天 - ${day.title}`}>
               <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Day Header */}
                 <div className="day-header">
@@ -343,7 +431,5 @@ export function PlanDetail() {
             </Card>
           ))}
         </div>
-      )}
-    </div>
   );
 }

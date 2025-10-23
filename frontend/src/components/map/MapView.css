@@ -1,0 +1,85 @@
+.map-view-container {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-container {
+  border-radius: 8px;
+}
+
+.map-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 1000;
+}
+
+.map-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 1px dashed #d9d9d9;
+}
+
+.map-error p {
+  color: #666;
+  margin: 0;
+}
+
+/* 标记标签样式 */
+:global(.marker-label) {
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+/* 信息窗口样式 */
+:global(.map-info-window) {
+  padding: 12px;
+  min-width: 200px;
+}
+
+:global(.map-info-window) h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+:global(.map-info-window) .address {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+:global(.map-info-window) .description {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #999;
+}
+
+/* 高德地图UI优化 */
+:global(.amap-logo),
+:global(.amap-copyright) {
+  opacity: 0.6;
+}
+
+:global(.amap-logo):hover,
+:global(.amap-copyright):hover {
+  opacity: 1;
+}
