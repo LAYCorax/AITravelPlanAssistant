@@ -1,0 +1,78 @@
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-section {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.welcome-section h2 {
+  margin-bottom: 8px;
+}
+
+.quick-action-card {
+  margin-bottom: 32px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+}
+
+.quick-action-card .ant-card-body {
+  padding: 48px 24px;
+}
+
+.quick-action-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.quick-action-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.quick-action-content h3 {
+  color: white;
+  margin-bottom: 16px;
+}
+
+.quick-action-content p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  margin-bottom: 24px;
+}
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.feature-card {
+  text-align: center;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card h4 {
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .features-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-action-card .ant-card-body {
+    padding: 32px 16px;
+  }
+}

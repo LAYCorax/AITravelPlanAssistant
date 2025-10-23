@@ -1,0 +1,18 @@
+.login-page {
+  width: 100%;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  text-align: center;
+  color: #262626;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: #8c8c8c;
+  text-align: center;
+  margin: 0 0 32px 0;
+}

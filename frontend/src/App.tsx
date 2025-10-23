@@ -1,35 +1,51 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import { AuthProvider } from './store/auth/AuthContext';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { AuthLayout, MainLayout } from './layouts';
+import { Login } from './pages/Auth/Login';
+import { Register } from './pages/Auth/Register';
+import { Home } from './pages/Home/Home';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <ConfigProvider locale={zhCN}>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/auth" element={<AuthLayout />}>
+              <Route path="login" element={<Login />} />
+              <Route path="register" element={<Register />} />
+              <Route index element={<Navigate to="login" replace />} />
+            </Route>
+
+            {/* Protected Routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Home />} />
+              <Route path="planner" element={<div>规划页面（待开发）</div>} />
+              <Route path="plans" element={<div>计划列表（待开发）</div>} />
+              <Route path="plans/:id" element={<div>计划详情（待开发）</div>} />
+              <Route path="settings" element={<div>设置页面（待开发）</div>} />
+            </Route>
+
+            {/* 404 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </ConfigProvider>
+  );
 }
 
-export default App
+export default App;
