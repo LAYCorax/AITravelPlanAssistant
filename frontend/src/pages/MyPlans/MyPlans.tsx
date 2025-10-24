@@ -6,7 +6,6 @@ import {
   DollarOutlined,
   UserOutlined,
   EyeOutlined,
-  EditOutlined,
   DeleteOutlined,
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
@@ -165,13 +164,6 @@ export function MyPlans() {
                   onClick={() => navigate(`/plans/${plan.id}`)}
                 >
                   查看
-                </Button>,
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  onClick={() => navigate(`/plans/${plan.id}/edit`)}
-                >
-                  编辑
                 </Button>,
                 <Button
                   type="text"

@@ -33,7 +33,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { TravelPlan, ItineraryDetail, Expense, ExpenseSummary } from '../../types';
-import { getTravelPlanById } from '../../services/api/travelPlans';
+import { getTravelPlanById, updateTravelPlan } from '../../services/api/travelPlans';
 import { 
   getExpensesByPlanId, 
   createExpense, 
@@ -49,6 +49,7 @@ import { VoiceExpenseRecorder } from '../../components/expense/VoiceExpenseRecor
 import { ExpenseCharts } from '../../components/expense/ExpenseCharts';
 import { BudgetAlert } from '../../components/expense/BudgetAlert';
 import { ExpenseReport } from '../../components/expense/ExpenseReport';
+import { ItineraryEditor } from '../../components/itinerary/ItineraryEditor';
 import dayjs from 'dayjs';
 import './PlanDetail.css';
 
@@ -79,6 +80,9 @@ export function PlanDetail() {
   });
   const [expenseLoading, setExpenseLoading] = useState(false);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  
+  // 行程编辑相关状态 - Week 8
+  const [isEditingItinerary, setIsEditingItinerary] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -92,6 +96,37 @@ export function PlanDetail() {
     setMapConfigured(config.configured);
     setMapConfigMessage(config.message);
     return config.configured;
+  };
+
+  // 保存行程编辑 - Week 8
+  const handleSaveItinerary = async (updatedItinerary: ItineraryDetail[]) => {
+    if (!id) return;
+    
+    try {
+      // 调用API保存行程到数据库
+      const result = await updateTravelPlan(id, {}, updatedItinerary.map(item => ({
+        day: item.day,
+        date: item.date,
+        title: item.title,
+        activities: item.activities,
+        accommodation: item.accommodation,
+        transportation: item.transportation,
+        meals: item.meals,
+        totalCost: item.totalCost,
+        notes: item.notes,
+      })));
+      
+      if (result.success) {
+        setItinerary(updatedItinerary);
+        setIsEditingItinerary(false);
+        message.success('行程保存成功');
+      } else {
+        message.error('行程保存失败: ' + result.error);
+      }
+    } catch (error) {
+      console.error('保存行程失败:', error);
+      message.error('行程保存失败，请稍后重试');
+    }
   };
 
   // 处理标签页切换
@@ -343,7 +378,29 @@ export function PlanDetail() {
                     <UnorderedListOutlined /> 行程详情
                   </span>
                 ),
-                children: <ItineraryView itinerary={itinerary} />,
+                children: (
+                  <div style={{ marginTop: 16 }}>
+                    <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
+                      <Button
+                        type={isEditingItinerary ? 'default' : 'primary'}
+                        icon={<EditOutlined />}
+                        onClick={() => setIsEditingItinerary(!isEditingItinerary)}
+                      >
+                        {isEditingItinerary ? '取消编辑' : '编辑行程'}
+                      </Button>
+                    </Space>
+                    
+                    {isEditingItinerary ? (
+                      <ItineraryEditor
+                        itinerary={itinerary}
+                        onSave={handleSaveItinerary}
+                        onCancel={() => setIsEditingItinerary(false)}
+                      />
+                    ) : (
+                      <ItineraryView itinerary={itinerary} />
+                    )}
+                  </div>
+                ),
               },
               {
                 key: 'map',
@@ -510,7 +567,9 @@ function ItineraryView({ itinerary }: { itinerary: ItineraryDetail[] }) {
                           <div className="activity-item">
                             <Space direction="vertical" size="small" style={{ width: '100%' }}>
                               <Space>
-                                <Text strong>{activity.time}</Text>
+                                <Text strong>
+                                  {activity.time || '未设置时间'}
+                                </Text>
                                 <Tag>{activity.type === 'activity' ? '景点' : '活动'}</Tag>
                               </Space>
                               <Title level={5} style={{ margin: 0 }}>

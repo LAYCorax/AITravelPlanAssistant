@@ -1,0 +1,166 @@
+.itinerary-editor {
+  padding: 16px;
+}
+
+.day-section {
+  margin-bottom: 24px;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.day-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1890ff;
+  margin: 0;
+}
+
+.activity-card {
+  margin-bottom: 12px;
+  border-left: 4px solid #1890ff;
+  transition: all 0.3s ease;
+}
+
+.activity-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.activity-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-title h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.activity-time {
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+.activity-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.activity-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.activity-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #595959;
+  font-size: 13px;
+}
+
+.activity-info-item .anticon {
+  margin-top: 2px;
+  color: #8c8c8c;
+}
+
+.activity-description {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+  color: #595959;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.activity-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 2px 8px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  border-radius: 4px;
+  color: #fa8c16;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.activity-tips {
+  margin-top: 8px;
+  padding: 8px;
+  background: #e6f7ff;
+  border-left: 3px solid #1890ff;
+  border-radius: 4px;
+  color: #0050b3;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* Modal form styles */
+.ant-modal-body .ant-form {
+  margin-top: 16px;
+}
+
+.ant-modal-body .ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* Empty state */
+.empty-activities {
+  text-align: center;
+  padding: 24px;
+  color: #8c8c8c;
+}
+
+/* Activity type colors */
+.activity-card[data-type="sightseeing"] {
+  border-left-color: #1890ff;
+}
+
+.activity-card[data-type="dining"] {
+  border-left-color: #52c41a;
+}
+
+.activity-card[data-type="activity"] {
+  border-left-color: #fa8c16;
+}
+
+.activity-card[data-type="transport"] {
+  border-left-color: #722ed1;
+}

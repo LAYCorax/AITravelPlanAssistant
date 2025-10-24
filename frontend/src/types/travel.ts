@@ -25,7 +25,7 @@ export interface TravelPlan {
 
 // AI生成的行程详情 - 嵌套结构（用于前端显示）
 export interface Activity {
-  time: string;
+  time: string; // 时间区间，格式为 "HH:mm-HH:mm"
   type: 'sightseeing' | 'dining' | 'activity' | 'transport';
   name: string;
   location: string;
