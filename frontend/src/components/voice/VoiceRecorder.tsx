@@ -36,6 +36,13 @@ export function VoiceRecorder({ onTranscriptComplete, onError }: VoiceRecorderPr
 
   const startRecording = async () => {
     try {
+      // 先检查语音识别配置
+      const configCheck = await voiceService.checkVoiceConfig();
+      if (!configCheck.configured) {
+        message.error(configCheck.message);
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
       // 创建音频分析器

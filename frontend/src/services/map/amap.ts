@@ -3,12 +3,12 @@
  * 地图服务集成
  */
 
-const AMAP_KEY = import.meta.env.VITE_AMAP_KEY;
-const AMAP_SECRET = import.meta.env.VITE_AMAP_SECRET;
+import { getDecryptedApiKey } from '../api/apiConfig';
 
 // 高德地图JS API加载状态
 let amapLoaded = false;
 let amapLoadingPromise: Promise<void> | null = null;
+let cachedAmapKey: string | null = null;
 
 /**
  * 坐标点类型
@@ -51,33 +51,66 @@ export interface RouteStep {
 export async function loadAmapScript(): Promise<void> {
   // 如果已经加载，直接返回
   if (amapLoaded && window.AMap) {
+    console.log('[AMap] 地图已加载，直接返回');
     return Promise.resolve();
   }
 
   // 如果正在加载，返回加载Promise
   if (amapLoadingPromise) {
+    console.log('[AMap] 地图正在加载中，等待加载完成');
     return amapLoadingPromise;
   }
 
   // 开始加载
-  amapLoadingPromise = new Promise((resolve, reject) => {
-    if (!AMAP_KEY || AMAP_KEY === 'your_amap_api_key_here') {
-      reject(new Error('请先配置高德地图API密钥'));
+  amapLoadingPromise = new Promise(async (resolve, reject) => {
+    console.log('[AMap] 开始加载地图API...');
+    
+    // 从用户配置读取API密钥
+    let amapKey = cachedAmapKey;
+    
+    if (!amapKey) {
+      try {
+        console.log('[AMap] 从数据库读取API密钥...');
+        amapKey = await getDecryptedApiKey('map');
+        
+        if (amapKey) {
+          console.log('[AMap] API密钥读取成功:', amapKey.substring(0, 8) + '...');
+          // 缓存密钥
+          cachedAmapKey = amapKey;
+        } else {
+          console.warn('[AMap] 未能获取到API密钥');
+        }
+      } catch (error) {
+        console.error('[AMap] 读取用户配置失败:', error);
+      }
+    } else {
+      console.log('[AMap] 使用缓存的API密钥');
+    }
+    
+    // 检查配置
+    if (!amapKey) {
+      const errorMsg = '地图服务未配置。请前往【设置 → API配置】页面配置高德地图的API密钥。';
+      console.error('[AMap] ' + errorMsg);
+      reject(new Error(errorMsg));
       return;
     }
 
     // 创建script标签
     const script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${AMAP_KEY}&plugin=AMap.Scale,AMap.ToolBar,AMap.ControlBar,AMap.Driving,AMap.Geocoder,AMap.PlaceSearch`;
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapKey}&plugin=AMap.Scale,AMap.ToolBar,AMap.ControlBar,AMap.Driving,AMap.Geocoder,AMap.PlaceSearch`;
+    
+    console.log('[AMap] 开始加载地图脚本:', script.src.substring(0, 80) + '...');
     
     script.onload = () => {
       amapLoaded = true;
+      console.log('[AMap] 地图脚本加载成功');
       resolve();
     };
 
-    script.onerror = () => {
+    script.onerror = (error) => {
       amapLoadingPromise = null;
+      console.error('[AMap] 地图脚本加载失败:', error);
       reject(new Error('加载高德地图失败'));
     };
 
@@ -90,18 +123,50 @@ export async function loadAmapScript(): Promise<void> {
 /**
  * 检查地图API配置
  */
-export function checkAmapConfig(): { configured: boolean; message: string } {
-  if (!AMAP_KEY || AMAP_KEY === 'your_amap_api_key_here') {
-    return {
-      configured: false,
-      message: '请在设置中配置高德地图API密钥',
-    };
+export async function checkAmapConfig(): Promise<{ configured: boolean; message: string }> {
+  // 检查用户配置
+  try {
+    const apiKey = await getDecryptedApiKey('map');
+    if (apiKey) {
+      console.log('[AMap] 检查配置：API密钥存在');
+      return {
+        configured: true,
+        message: '高德地图配置正常',
+      };
+    }
+  } catch (error) {
+    console.error('[AMap] 检查地图配置失败:', error);
   }
-
+  
+  console.warn('[AMap] 检查配置：未找到API密钥');
   return {
-    configured: true,
-    message: '高德地图配置正常',
+    configured: false,
+    message: '地图服务未配置。请前往【设置 → API配置】页面配置高德地图的API密钥。',
   };
+}
+
+/**
+ * 清除地图缓存，强制重新加载
+ * 当用户更新API密钥后需要调用此函数
+ */
+export function clearAmapCache(): void {
+  console.log('[AMap] 清除地图缓存');
+  cachedAmapKey = null;
+  amapLoaded = false;
+  amapLoadingPromise = null;
+  
+  // 移除已加载的地图脚本
+  const scripts = document.querySelectorAll('script[src*="webapi.amap.com"]');
+  scripts.forEach(script => {
+    console.log('[AMap] 移除地图脚本:', script.getAttribute('src')?.substring(0, 50) + '...');
+    script.remove();
+  });
+  
+  // 清除全局AMap对象
+  if (window.AMap) {
+    console.log('[AMap] 清除全局AMap对象');
+    delete window.AMap;
+  }
 }
 
 /**

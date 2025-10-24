@@ -17,9 +17,28 @@ export function Register() {
       setLocalError(null);
       clearError();
       await register(values);
+      
+      // 如果注册成功且不需要邮箱确认，导航到首页
+      // 否则错误会被捕获并显示
       navigate('/');
     } catch (err: any) {
-      setLocalError(err.message || '注册失败，请重试');
+      const errorMessage = err.message || '注册失败，请重试';
+      
+      // 如果是邮箱确认提示，使用成功样式显示
+      if (errorMessage.includes('请检查您的邮箱')) {
+        setLocalError(null);
+        // 显示成功消息并停留在注册页面
+        form.setFields([
+          {
+            name: 'email',
+            errors: [],
+            warnings: [errorMessage],
+          },
+        ]);
+        return;
+      }
+      
+      setLocalError(errorMessage);
     }
   };
 

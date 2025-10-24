@@ -11,6 +11,7 @@ import { Home } from './pages/Home/Home';
 import { PlannerInput } from './pages/TravelPlanner/PlannerInput';
 import { PlanDetail } from './pages/TravelPlanner/PlanDetail';
 import { MyPlans } from './pages/MyPlans/MyPlans';
+import Settings from './pages/Settings/Settings';
 import './App.css';
 
 function App() {
@@ -39,7 +40,7 @@ function App() {
               <Route path="planner" element={<PlannerInput />} />
               <Route path="plans" element={<MyPlans />} />
               <Route path="plans/:id" element={<PlanDetail />} />
-              <Route path="settings" element={<div>设置页面（待开发）</div>} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* 404 */}

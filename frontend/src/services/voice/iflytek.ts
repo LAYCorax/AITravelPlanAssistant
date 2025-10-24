@@ -4,6 +4,8 @@
  * 使用WebSocket流式语音听写API
  */
 
+import { getApiConfig } from '../api/apiConfig';
+
 interface VoiceRecognitionResult {
   text: string;
   confidence: number;
@@ -31,20 +33,62 @@ interface IFlyTekWebSocketResponse {
 
 export const voiceService = {
   /**
+   * 检查语音识别配置是否完整
+   * 在开始录音前调用此方法
+   */
+  async checkVoiceConfig(): Promise<{ configured: boolean; message: string }> {
+    try {
+      const config = await getApiConfig('voice');
+      if (config && config.api_key_encrypted && config.additional_config?.app_id) {
+        const { getDecryptedApiKey, getDecryptedApiSecret } = await import('../api/apiConfig');
+        const apiKey = await getDecryptedApiKey('voice');
+        const apiSecret = await getDecryptedApiSecret('voice');
+        
+        if (apiKey && apiSecret) {
+          return {
+            configured: true,
+            message: '语音识别服务配置正常',
+          };
+        }
+      }
+    } catch (error) {
+      console.error('检查语音配置失败:', error);
+    }
+    
+    return {
+      configured: false,
+      message: '语音识别服务未配置。请前往【设置 → API配置】页面配置科大讯飞语音识别服务的App ID、API Key和API Secret。',
+    };
+  },
+
+  /**
    * 上传音频文件进行语音识别
    * 使用WebSocket流式API
    * @param audioBlob 音频文件
    * @returns 识别结果
    */
   async transcribeAudio(audioBlob: Blob): Promise<VoiceRecognitionResult> {
-    const appId = import.meta.env.VITE_VOICE_APP_ID;
-    const apiKey = import.meta.env.VITE_VOICE_API_KEY;
-    const apiSecret = import.meta.env.VITE_VOICE_API_SECRET;
+    // 从用户配置读取API密钥
+    let appId: string | undefined;
+    let apiKey: string | undefined;
+    let apiSecret: string | undefined;
 
+    try {
+      const config = await getApiConfig('voice');
+      if (config && config.api_key_encrypted) {
+        // 解密获取实际密钥
+        const { getDecryptedApiKey, getDecryptedApiSecret } = await import('../api/apiConfig');
+        apiKey = await getDecryptedApiKey('voice') || undefined;
+        apiSecret = await getDecryptedApiSecret('voice') || undefined;
+        appId = config.additional_config?.app_id;
+      }
+    } catch (error) {
+      console.error('读取用户配置失败:', error);
+    }
+
+    // 检查配置是否完整
     if (!appId || !apiKey || !apiSecret) {
-      const errorMsg = '科大讯飞API未配置。请在环境变量中设置 VITE_VOICE_APP_ID, VITE_VOICE_API_KEY 和 VITE_VOICE_API_SECRET';
-      console.error(errorMsg);
-      throw new Error(errorMsg);
+      throw new Error('语音识别服务未配置。请前往【设置 → API配置】页面配置科大讯飞语音识别服务的App ID、API Key和API Secret。');
     }
 
     try {

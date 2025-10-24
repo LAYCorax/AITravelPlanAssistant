@@ -1,0 +1,231 @@
+.settings-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  margin-bottom: 24px;
+}
+
+.settings-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #262626;
+}
+
+.settings-header p {
+  color: #8c8c8c;
+  margin: 0;
+}
+
+.settings-content {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.settings-tabs {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* API配置样式 */
+.api-config-section {
+  padding: 24px;
+}
+
+.api-config-item {
+  margin-bottom: 32px;
+  padding: 24px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.api-config-item:last-child {
+  margin-bottom: 0;
+}
+
+.api-config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.api-config-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.api-config-title h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #262626;
+}
+
+.api-config-status {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.api-config-status.configured {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.api-config-status.not-configured {
+  background: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
+
+.api-config-status.loading {
+  background: #e6f7ff;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+}
+
+.api-config-description {
+  color: #8c8c8c;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.api-config-form {
+  margin-top: 16px;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.api-config-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.api-config-help {
+  margin-top: 12px;
+  padding: 12px;
+  background: #e6f7ff;
+  border-left: 3px solid #1890ff;
+  border-radius: 4px;
+}
+
+.api-config-help p {
+  margin: 0 0 8px 0;
+  color: #595959;
+  font-size: 14px;
+}
+
+.api-config-help p:last-child {
+  margin-bottom: 0;
+}
+
+.api-config-help a {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.api-config-help a:hover {
+  text-decoration: underline;
+}
+
+/* 用户资料样式 */
+.user-profile-section {
+  padding: 24px;
+}
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.avatar-upload {
+  text-align: center;
+}
+
+.avatar-upload .ant-avatar {
+  margin-bottom: 12px;
+}
+
+.profile-form {
+  max-width: 600px;
+}
+
+/* 偏好设置样式 */
+.preferences-section {
+  padding: 24px;
+}
+
+.preference-group {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.preference-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.preference-group h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #262626;
+}
+
+.preference-group .ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 16px;
+  }
+
+  .settings-header h1 {
+    font-size: 20px;
+  }
+
+  .api-config-item {
+    padding: 16px;
+  }
+
+  .api-config-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .api-config-actions {
+    flex-direction: column;
+  }
+
+  .api-config-actions button {
+    width: 100%;
+  }
+
+  .profile-avatar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

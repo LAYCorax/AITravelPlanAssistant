@@ -142,8 +142,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error(error.message || '注册失败');
       }
 
+      // 检查是否需要邮箱确认
+      if (data?.user && !data.user.confirmed_at) {
+        // 用户需要确认邮箱
+        dispatch({ type: 'SET_LOADING', payload: false });
+        throw new Error('注册成功！请检查您的邮箱并点击确认链接以激活账户。');
+      }
+
+      // 如果不需要确认或已确认，设置用户
       if (data?.user) {
         dispatch({ type: 'SET_USER', payload: data.user });
+      } else {
+        // 注册成功但需要确认邮箱
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message });

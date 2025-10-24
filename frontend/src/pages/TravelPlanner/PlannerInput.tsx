@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { Form, Input, DatePicker, InputNumber, Button, Card, Space, message, Tabs, Modal, Spin } from 'antd';
-import { AudioOutlined, FormOutlined, CompassOutlined, LoadingOutlined } from '@ant-design/icons';
+import { useState } from 'react';
+import { Form, Input, DatePicker, InputNumber, Button, Card, Space, message, Tabs, Modal } from 'antd';
+import { AudioOutlined, FormOutlined, CompassOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { useNavigate } from 'react-router-dom';
-import type { CreateTravelPlanInput } from '../../types';
 import { VoiceRecorder } from '../../components/voice/VoiceRecorder';
 import { generateTripPlan, checkLLMConfig } from '../../services/ai/llm';
 import { saveTravelPlan } from '../../services/api/travelPlans';
-import { voiceService } from '../../services/voice/iflytek';
 import './PlannerInput.css';
 
 const { RangePicker } = DatePicker;
@@ -26,34 +24,34 @@ export function PlannerInput() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'voice' | 'manual'>('manual');
-  const [generatingPlan, setGeneratingPlan] = useState(false);
 
   const handleManualSubmit = async (values: PlanFormValues) => {
     try {
       setLoading(true);
       
       // 检查LLM配置
-      const llmConfig = checkLLMConfig();
+      const llmConfig = await checkLLMConfig();
       if (!llmConfig.configured) {
-        Modal.confirm({
-          title: '未配置AI服务',
-          content: llmConfig.message + '。是否跳过AI生成，直接创建计划？',
-          okText: '直接创建',
-          cancelText: '去设置',
-          onOk: async () => {
-            // 直接保存基础计划信息（不生成AI行程）
-            await saveBasicPlan(values);
-          },
-          onCancel: () => {
-            // TODO: 跳转到设置页面
-            message.info('请前往设置页面配置API密钥');
+        // 强制要求配置API Key
+        Modal.error({
+          title: '无法使用服务',
+          content: (
+            <div>
+              <p>{llmConfig.message}</p>
+              <p style={{ marginTop: '10px', color: '#666' }}>
+                配置完成后，您才能使用AI生成旅行计划功能。
+              </p>
+            </div>
+          ),
+          okText: '前往设置',
+          onOk: () => {
+            navigate('/settings?tab=api');
           },
         });
         return;
       }
 
       // 使用AI生成旅行计划
-      setGeneratingPlan(true);
       message.loading({ content: '正在为您生成旅行计划...', key: 'generating', duration: 0 });
 
       const result = await generateTripPlan({
@@ -89,40 +87,10 @@ export function PlannerInput() {
       message.error(error.message || '创建计划失败');
     } finally {
       setLoading(false);
-      setGeneratingPlan(false);
     }
   };
 
-  const saveBasicPlan = async (values: PlanFormValues) => {
-    try {
-      const planData = {
-        title: `${values.destination}旅行计划`,
-        destination: values.destination,
-        startDate: values.dateRange[0].format('YYYY-MM-DD'),
-        endDate: values.dateRange[1].format('YYYY-MM-DD'),
-        days: values.dateRange[1].diff(values.dateRange[0], 'day') + 1,
-        budget: values.budget,
-        travelerCount: values.travelerCount,
-        status: 'draft' as const,
-        description: values.description || `${values.destination}旅行，${values.travelerCount}人，预算${values.budget}元`,
-      };
 
-      const result = await saveTravelPlan(planData, []);
-      
-      if (!result.success) {
-        throw new Error(result.error || '保存失败');
-      }
-
-      message.success('基础计划创建成功！您可以稍后手动添加行程。');
-      navigate('/plans');
-    } catch (error: any) {
-      message.error(error.message || '保存失败');
-    }
-  };
-
-  const handleVoiceInput = () => {
-    message.info('请点击麦克风按钮开始语音输入');
-  };
 
   const handleTranscriptComplete = async (text: string) => {
     // 显示识别结果并让用户确认
@@ -145,12 +113,19 @@ export function PlannerInput() {
       onOk: async () => {
         try {
           setLoading(true);
-          setGeneratingPlan(true);
           
           // 检查LLM配置
-          const llmConfig = checkLLMConfig();
+          const llmConfig = await checkLLMConfig();
           if (!llmConfig.configured) {
             message.error(llmConfig.message);
+            Modal.info({
+              title: '无法使用服务',
+              content: llmConfig.message,
+              okText: '前往设置',
+              onOk: () => {
+                navigate('/settings?tab=api');
+              },
+            });
             return;
           }
 
@@ -185,7 +160,6 @@ export function PlannerInput() {
           console.error('语音生成计划失败:', error);
         } finally {
           setLoading(false);
-          setGeneratingPlan(false);
         }
       },
       onCancel: () => {

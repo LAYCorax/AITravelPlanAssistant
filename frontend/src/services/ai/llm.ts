@@ -4,9 +4,9 @@
  */
 
 import { TravelPlan, ItineraryDetail } from '@/types';
+import { getDecryptedApiKey } from '../api/apiConfig';
 
-const LLM_API_KEY = import.meta.env.VITE_LLM_API_KEY;
-const LLM_BASE_URL = import.meta.env.VITE_LLM_BASE_URL;
+const LLM_BASE_URL = import.meta.env.VITE_LLM_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
 /**
  * 用户输入的旅行需求
@@ -350,6 +350,30 @@ ${request.additionalRequirements ? `- **特殊要求**: ${request.additionalRequ
 }
 
 /**
+ * 检查LLM API配置是否完整
+ * 在生成旅行计划前调用此方法
+ */
+export async function checkLLMConfig(): Promise<{ configured: boolean; message: string }> {
+  try {
+    const apiKey = await getDecryptedApiKey('llm');
+    
+    if (apiKey) {
+      return {
+        configured: true,
+        message: 'AI服务配置正常',
+      };
+    }
+  } catch (error) {
+    console.error('检查AI配置失败:', error);
+  }
+  
+  return {
+    configured: false,
+    message: 'AI服务未配置。请前往【设置 → API配置】页面配置大语言模型服务（如：阿里云通义千问）的API密钥。',
+  };
+}
+
+/**
  * 调用阿里云百炼API生成旅行计划
  */
 export async function generateTripPlan(
@@ -357,9 +381,12 @@ export async function generateTripPlan(
   onProgress?: (text: string) => void
 ): Promise<TripGenerationResponse> {
   try {
-    // 检查API Key
-    if (!LLM_API_KEY || LLM_API_KEY === 'your_alibaba_bailian_api_key_here') {
-      throw new Error('请先配置阿里云百炼API密钥');
+    // 从用户配置读取API密钥
+    const apiKey = await getDecryptedApiKey('llm');
+    
+    // 检查配置
+    if (!apiKey) {
+      throw new Error('AI服务未配置。请前往【设置 → API配置】页面配置大语言模型服务（如：阿里云通义千问）的API密钥。');
     }
 
     const prompt = buildTripPlanningPrompt(request);
@@ -369,7 +396,7 @@ export async function generateTripPlan(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LLM_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'qwen-turbo', // 使用通义千问模型
@@ -494,8 +521,12 @@ export async function regenerateTripPlan(
   feedback: string
 ): Promise<TripGenerationResponse> {
   try {
-    if (!LLM_API_KEY || LLM_API_KEY === 'your_alibaba_bailian_api_key_here') {
-      throw new Error('请先配置阿里云百炼API密钥');
+    // 从用户配置读取API密钥
+    const apiKey = await getDecryptedApiKey('llm');
+    
+    // 检查配置
+    if (!apiKey) {
+      throw new Error('AI服务未配置。请前往【设置 → API配置】页面配置大语言模型服务（如：阿里云通义千问）的API密钥。');
     }
 
     const prompt = buildTripPlanningPrompt(request);
@@ -505,7 +536,7 @@ export async function regenerateTripPlan(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LLM_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'qwen-turbo',
@@ -554,30 +585,6 @@ export async function regenerateTripPlan(
 }
 
 /**
- * 检查LLM API配置是否正确
- */
-export function checkLLMConfig(): { configured: boolean; message: string } {
-  if (!LLM_API_KEY || LLM_API_KEY === 'your_alibaba_bailian_api_key_here') {
-    return {
-      configured: false,
-      message: '请在设置中配置阿里云百炼API密钥',
-    };
-  }
-
-  if (!LLM_BASE_URL) {
-    return {
-      configured: false,
-      message: 'LLM API地址未配置',
-    };
-  }
-
-  return {
-    configured: true,
-    message: 'LLM配置正常',
-  };
-}
-
-/**
  * 基于语音输入生成旅行计划
  * 直接将用户的口述需求发送给大语言模型，由AI自行理解和规划
  */
@@ -586,9 +593,12 @@ export async function generateTripPlanFromVoice(
   onProgress?: (text: string) => void
 ): Promise<TripGenerationResponse> {
   try {
-    // 检查API Key
-    if (!LLM_API_KEY || LLM_API_KEY === 'your_alibaba_bailian_api_key_here') {
-      throw new Error('请先配置阿里云百炼API密钥');
+    // 从用户配置读取API密钥
+    const apiKey = await getDecryptedApiKey('llm');
+    
+    // 检查配置
+    if (!apiKey) {
+      throw new Error('AI服务未配置。请前往【设置 → API配置】页面配置大语言模型服务（如：阿里云通义千问）的API密钥。');
     }
 
     const prompt = buildVoiceTripPlanningPrompt(voiceInput);
@@ -598,7 +608,7 @@ export async function generateTripPlanFromVoice(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LLM_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'qwen-turbo',

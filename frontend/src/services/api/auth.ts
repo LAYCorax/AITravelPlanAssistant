@@ -11,13 +11,30 @@ export const authService = {
       const { data, error } = await supabase.auth.signUp({
         email: credentials.email,
         password: credentials.password,
+        options: {
+          data: {
+            username: credentials.username,
+          },
+          // 如果Supabase配置了邮箱确认，这里可以设置不需要确认（开发环境）
+          // emailRedirectTo: window.location.origin,
+        },
       });
 
       if (error) throw error;
 
-      // Create user profile
+      // 检查用户是否需要确认邮箱
+      if (data.user && !data.user.confirmed_at) {
+        console.log('请检查邮箱确认链接');
+      }
+
+      // Create user profile (如果用户已确认或不需要确认)
       if (data.user) {
-        await databaseService.createUserProfile(data.user.id, credentials.username);
+        try {
+          await databaseService.createUserProfile(data.user.id, credentials.username);
+        } catch (profileError) {
+          console.error('创建用户配置失败:', profileError);
+          // 不抛出错误，因为主要的注册已经成功
+        }
       }
 
       return { data, error: null };

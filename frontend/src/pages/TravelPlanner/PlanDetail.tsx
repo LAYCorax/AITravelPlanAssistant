@@ -13,6 +13,7 @@ import {
   Divider,
   Empty,
   Tabs,
+  Alert,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -27,11 +28,12 @@ import {
   CoffeeOutlined,
   EnvironmentFilled,
   UnorderedListOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { TravelPlan, ItineraryDetail } from '../../types';
 import { getTravelPlanById } from '../../services/api/travelPlans';
 import { MapView } from '../../components/map/MapView';
-import type { Location } from '../../services/map/amap';
+import { checkAmapConfig, type Location } from '../../services/map/amap';
 import dayjs from 'dayjs';
 import './PlanDetail.css';
 
@@ -44,12 +46,37 @@ export function PlanDetail() {
   const [plan, setPlan] = useState<TravelPlan | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryDetail[]>([]);
   const [activeTab, setActiveTab] = useState<'itinerary' | 'map'>('itinerary');
+  const [mapConfigured, setMapConfigured] = useState(false);
+  const [mapConfigMessage, setMapConfigMessage] = useState('');
 
   useEffect(() => {
     if (id) {
       loadPlanDetail(id);
     }
   }, [id]);
+
+  // 检查地图API配置
+  const checkMapConfiguration = async () => {
+    const config = await checkAmapConfig();
+    setMapConfigured(config.configured);
+    setMapConfigMessage(config.message);
+    return config.configured;
+  };
+
+  // 处理标签页切换
+  const handleTabChange = async (key: string) => {
+    if (key === 'map') {
+      // 切换到地图展示时，检查地图API配置
+      const isConfigured = await checkMapConfiguration();
+      if (!isConfigured) {
+        message.warning({
+          content: '地图服务未配置。请前往【设置 → API配置】页面配置高德地图的API密钥。',
+          duration: 5,
+        });
+      }
+    }
+    setActiveTab(key as 'itinerary' | 'map');
+  };
 
   const loadPlanDetail = async (planId: string) => {
     try {
@@ -220,7 +247,7 @@ export function PlanDetail() {
         <Card>
           <Tabs
             activeKey={activeTab}
-            onChange={(key) => setActiveTab(key as 'itinerary' | 'map')}
+            onChange={handleTabChange}
             items={[
               {
                 key: 'itinerary',
@@ -240,6 +267,29 @@ export function PlanDetail() {
                 ),
                 children: (
                   <div style={{ marginTop: 16 }}>
+                    {!mapConfigured && activeTab === 'map' && (
+                      <Alert
+                        message="地图服务未配置"
+                        description={
+                          <div>
+                            {mapConfigMessage}
+                            <br />
+                            <Button
+                              type="link"
+                              icon={<SettingOutlined />}
+                              onClick={() => navigate('/settings?tab=api')}
+                              style={{ paddingLeft: 0, marginTop: 8 }}
+                            >
+                              前往配置
+                            </Button>
+                          </div>
+                        }
+                        type="warning"
+                        showIcon
+                        closable
+                        style={{ marginBottom: 16 }}
+                      />
+                    )}
                     <MapView
                       locations={getMapLocations()}
                       showRoutes={true}

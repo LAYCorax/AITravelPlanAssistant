@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Spin, message } from 'antd';
 import { loadAmapScript, checkAmapConfig, type Location } from '../../services/map/amap';
 import './MapView.css';
@@ -46,16 +46,23 @@ export function MapView({
 
   const initMap = async () => {
     try {
+      console.log('[MapView] 开始初始化地图');
+      
       // 检查配置
-      const config = checkAmapConfig();
+      const config = await checkAmapConfig();
+      console.log('[MapView] 配置检查结果:', config);
+      
       if (!config.configured) {
+        console.warn('[MapView] 地图配置未完成');
         setError(config.message);
         setLoading(false);
         return;
       }
 
+      console.log('[MapView] 开始加载地图API');
       // 加载地图API
       await loadAmapScript();
+      console.log('[MapView] 地图API加载成功');
 
       if (!mapContainerRef.current) {
         throw new Error('地图容器未找到');
@@ -63,8 +70,10 @@ export function MapView({
 
       // 计算中心点
       const mapCenter = center || calculateCenter(locations);
+      console.log('[MapView] 地图中心点:', mapCenter);
 
       // 创建地图实例
+      console.log('[MapView] 创建地图实例');
       const map = new window.AMap.Map(mapContainerRef.current, {
         zoom: zoom,
         center: [mapCenter.longitude, mapCenter.latitude],
@@ -74,22 +83,24 @@ export function MapView({
       });
 
       mapInstanceRef.current = map;
+      console.log('[MapView] 地图实例创建成功');
 
       // 添加控件（使用插件方式）
       window.AMap.plugin(['AMap.Scale', 'AMap.ToolBar', 'AMap.ControlBar'], () => {
         map.addControl(new window.AMap.Scale()); // 比例尺
         map.addControl(new window.AMap.ToolBar()); // 工具条
         map.addControl(new window.AMap.ControlBar()); // 3D控制器
+        console.log('[MapView] 地图控件添加成功');
       });
 
       setLoading(false);
       updateMarkers();
 
     } catch (err: any) {
-      console.error('地图初始化失败:', err);
+      console.error('[MapView] 地图初始化失败:', err);
       setError(err.message || '地图加载失败');
       setLoading(false);
-      message.error('地图加载失败');
+      message.error('地图加载失败: ' + (err.message || '未知错误'));
     }
   };
 

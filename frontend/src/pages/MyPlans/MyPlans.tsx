@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Empty, Button, Tag, Space, Spin, Input, Select, message, Modal } from 'antd';
 import {
   PlusOutlined,
@@ -192,7 +192,7 @@ export function MyPlans() {
                 <div className="plan-info-item">
                   <CalendarOutlined />
                   <span>
-                    {plan.start_date} 至 {plan.end_date} ({plan.days}天)
+                    {(plan as any).startDate || plan.start_date} 至 {(plan as any).endDate || plan.end_date} ({plan.days}天)
                   </span>
                 </div>
                 <div className="plan-info-item">
@@ -201,7 +201,7 @@ export function MyPlans() {
                 </div>
                 <div className="plan-info-item">
                   <UserOutlined />
-                  <span>{plan.traveler_count}人</span>
+                  <span>{(plan as any).travelerCount || plan.traveler_count}人</span>
                 </div>
               </div>
             </Card>
