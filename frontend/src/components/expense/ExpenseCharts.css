@@ -1,0 +1,39 @@
+.expense-charts-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
+}
+
+.expense-pie-chart,
+.expense-bar-chart,
+.expense-category-bar-chart {
+  padding: 16px 0;
+}
+
+/* 图表容器 */
+.expense-charts-card .ant-card-body {
+  padding: 16px;
+}
+
+/* Tab样式优化 */
+.expense-charts-card .ant-tabs-nav {
+  margin-bottom: 16px;
+}
+
+.expense-charts-card .ant-tabs-tab {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .expense-pie-chart,
+  .expense-bar-chart,
+  .expense-category-bar-chart {
+    padding: 8px 0;
+  }
+  
+  .expense-charts-card .ant-card-body {
+    padding: 12px;
+  }
+}

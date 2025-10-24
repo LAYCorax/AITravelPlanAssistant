@@ -46,6 +46,9 @@ import { ExpenseForm } from '../../components/expense/ExpenseForm';
 import { ExpenseList } from '../../components/expense/ExpenseList';
 import { ExpenseSummaryCard } from '../../components/expense/ExpenseSummary';
 import { VoiceExpenseRecorder } from '../../components/expense/VoiceExpenseRecorder';
+import { ExpenseCharts } from '../../components/expense/ExpenseCharts';
+import { BudgetAlert } from '../../components/expense/BudgetAlert';
+import { ExpenseReport } from '../../components/expense/ExpenseReport';
 import dayjs from 'dayjs';
 import './PlanDetail.css';
 
@@ -392,11 +395,27 @@ export function PlanDetail() {
                 children: (
                   <div style={{ marginTop: 16 }}>
                     <Space direction="vertical" style={{ width: '100%' }} size="large">
+                      {/* 预算预警 - Week 8 */}
+                      {expenseSummary.total > 0 && (
+                        <BudgetAlert 
+                          budget={plan?.budget || 0} 
+                          summary={expenseSummary}
+                        />
+                      )}
+                      
                       {/* 费用统计 */}
                       <ExpenseSummaryCard 
                         budget={plan?.budget || 0} 
                         summary={expenseSummary} 
                       />
+                      
+                      {/* 费用图表可视化 - Week 8 */}
+                      {expenses.length > 0 && (
+                        <ExpenseCharts 
+                          summary={expenseSummary} 
+                          expenses={expenses}
+                        />
+                      )}
                       
                       {/* 添加费用按钮和方式切换 */}
                       <div>
@@ -439,6 +458,15 @@ export function PlanDetail() {
                           onDelete={handleDeleteExpense}
                         />
                       </Card>
+
+                      {/* 支出分析报告 - Week 8 */}
+                      {plan && expenses.length > 0 && (
+                        <ExpenseReport
+                          plan={plan}
+                          summary={expenseSummary}
+                          expenses={expenses}
+                        />
+                      )}
                     </Space>
                   </div>
                 ),
