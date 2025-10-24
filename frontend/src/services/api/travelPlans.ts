@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../supabase/client';
-import { TravelPlan, ItineraryDetail } from '@/types';
+import type { TravelPlan, ItineraryDetail } from '../../types';
 
 /**
  * 保存完整的旅行计划（包括行程详情）
@@ -112,18 +112,23 @@ export async function getUserTravelPlans(): Promise<{
 
     const plans: TravelPlan[] = (data || []).map(item => ({
       id: item.id,
-      userId: item.user_id,
+      user_id: item.user_id,
       title: item.title,
       destination: item.destination,
-      startDate: item.start_date,
-      endDate: item.end_date,
+      start_date: item.start_date,
+      end_date: item.end_date,
       days: item.days,
       budget: item.budget,
-      travelerCount: item.traveler_count,
+      traveler_count: item.traveler_count,
       status: item.status,
       description: item.description,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      // 添加camelCase别名供前端使用
+      userId: item.user_id,
+      startDate: item.start_date,
+      endDate: item.end_date,
+      travelerCount: item.traveler_count,
     }));
 
     return {
@@ -173,18 +178,23 @@ export async function getTravelPlanById(planId: string): Promise<{
 
     const plan: TravelPlan = {
       id: planData.id,
-      userId: planData.user_id,
+      user_id: planData.user_id,
       title: planData.title,
       destination: planData.destination,
-      startDate: planData.start_date,
-      endDate: planData.end_date,
+      start_date: planData.start_date,
+      end_date: planData.end_date,
       days: planData.days,
       budget: planData.budget,
-      travelerCount: planData.traveler_count,
+      traveler_count: planData.traveler_count,
       status: planData.status,
       description: planData.description,
-      createdAt: planData.created_at,
-      updatedAt: planData.updated_at,
+      created_at: planData.created_at,
+      updated_at: planData.updated_at,
+      // 添加camelCase别名
+      userId: planData.user_id,
+      startDate: planData.start_date,
+      endDate: planData.end_date,
+      travelerCount: planData.traveler_count,
     };
 
     // 2. 获取行程详情

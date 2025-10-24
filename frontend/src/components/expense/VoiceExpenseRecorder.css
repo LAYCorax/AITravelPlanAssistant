@@ -1,0 +1,7 @@
+.voice-expense-recorder {
+  padding: 0;
+}
+
+.voice-expense-recorder .ant-alert {
+  margin-bottom: 16px;
+}

@@ -1,0 +1,44 @@
+.expense-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-overview-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+}
+
+.summary-overview-card .ant-card-body {
+  padding: 24px;
+}
+
+.summary-overview-card .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.summary-overview-card .ant-divider {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.summary-overview-card .ant-typography {
+  color: white;
+}
+
+.category-breakdown-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.category-item {
+  padding: 8px 0;
+}
+
+.category-item:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 16px;
+  margin-bottom: 8px;
+}

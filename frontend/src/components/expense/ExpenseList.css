@@ -1,0 +1,29 @@
+.expense-list {
+  background: transparent;
+}
+
+.expense-list .ant-list-item {
+  background: #fff;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.expense-list .ant-list-item:hover {
+  border-color: #1890ff;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.expense-list .ant-list-item-meta-title {
+  margin-bottom: 8px;
+}
+
+.expense-list .ant-list-item-meta-description {
+  color: #595959;
+}
+
+.expense-list .ant-list-item-action {
+  margin-left: 16px;
+}

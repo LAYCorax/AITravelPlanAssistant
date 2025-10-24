@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -29,11 +29,23 @@ import {
   EnvironmentFilled,
   UnorderedListOutlined,
   SettingOutlined,
+  AccountBookOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
-import { TravelPlan, ItineraryDetail } from '../../types';
+import type { TravelPlan, ItineraryDetail, Expense, ExpenseSummary } from '../../types';
 import { getTravelPlanById } from '../../services/api/travelPlans';
+import { 
+  getExpensesByPlanId, 
+  createExpense, 
+  deleteExpense,
+  getExpenseSummary 
+} from '../../services/api/expenses';
 import { MapView } from '../../components/map/MapView';
 import { checkAmapConfig, type Location } from '../../services/map/amap';
+import { ExpenseForm } from '../../components/expense/ExpenseForm';
+import { ExpenseList } from '../../components/expense/ExpenseList';
+import { ExpenseSummaryCard } from '../../components/expense/ExpenseSummary';
+import { VoiceExpenseRecorder } from '../../components/expense/VoiceExpenseRecorder';
 import dayjs from 'dayjs';
 import './PlanDetail.css';
 
@@ -45,9 +57,25 @@ export function PlanDetail() {
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<TravelPlan | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryDetail[]>([]);
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'map'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'map' | 'expenses'>('itinerary');
   const [mapConfigured, setMapConfigured] = useState(false);
   const [mapConfigMessage, setMapConfigMessage] = useState('');
+  
+  // 费用管理相关状态 - Week 7
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenseSummary, setExpenseSummary] = useState<ExpenseSummary>({
+    total: 0,
+    byCategory: {
+      transport: 0,
+      accommodation: 0,
+      food: 0,
+      attraction: 0,
+      shopping: 0,
+      other: 0,
+    },
+  });
+  const [expenseLoading, setExpenseLoading] = useState(false);
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -74,8 +102,64 @@ export function PlanDetail() {
           duration: 5,
         });
       }
+    } else if (key === 'expenses' && id) {
+      // 切换到费用管理时，加载费用数据
+      await loadExpenses(id);
     }
-    setActiveTab(key as 'itinerary' | 'map');
+    setActiveTab(key as 'itinerary' | 'map' | 'expenses');
+  };
+
+  // 加载费用数据 - Week 7
+  const loadExpenses = async (planId: string) => {
+    try {
+      setExpenseLoading(true);
+      const [expensesResult, summaryResult] = await Promise.all([
+        getExpensesByPlanId(planId),
+        getExpenseSummary(planId),
+      ]);
+
+      if (expensesResult.success && expensesResult.expenses) {
+        setExpenses(expensesResult.expenses);
+      }
+
+      if (summaryResult.success && summaryResult.summary) {
+        setExpenseSummary(summaryResult.summary);
+      }
+    } catch (error) {
+      console.error('加载费用数据失败:', error);
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
+  // 添加费用记录 - Week 7
+  const handleAddExpense = async (expense: any) => {
+    if (!id) return;
+    
+    setExpenseLoading(true);
+    const result = await createExpense(expense);
+    
+    if (result.success) {
+      message.success('费用记录添加成功');
+      setShowExpenseForm(false);
+      await loadExpenses(id);
+    } else {
+      message.error(result.error || '添加费用记录失败');
+    }
+    setExpenseLoading(false);
+  };
+
+  // 删除费用记录 - Week 7
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!id) return;
+    
+    const result = await deleteExpense(expenseId);
+    
+    if (result.success) {
+      await loadExpenses(id);
+    } else {
+      throw new Error(result.error || '删除失败');
+    }
   };
 
   const loadPlanDetail = async (planId: string) => {
@@ -238,7 +322,7 @@ export function PlanDetail() {
         </Space>
       </Card>
 
-      {/* Tabs for Itinerary and Map */}
+      {/* Tabs for Itinerary, Map and Expenses */}
       {itinerary.length === 0 ? (
         <Card>
           <Empty description="暂无行程安排" />
@@ -295,6 +379,67 @@ export function PlanDetail() {
                       showRoutes={true}
                       height="600px"
                     />
+                  </div>
+                ),
+              },
+              {
+                key: 'expenses',
+                label: (
+                  <span>
+                    <AccountBookOutlined /> 费用管理
+                  </span>
+                ),
+                children: (
+                  <div style={{ marginTop: 16 }}>
+                    <Space direction="vertical" style={{ width: '100%' }} size="large">
+                      {/* 费用统计 */}
+                      <ExpenseSummaryCard 
+                        budget={plan?.budget || 0} 
+                        summary={expenseSummary} 
+                      />
+                      
+                      {/* 添加费用按钮和方式切换 */}
+                      <div>
+                        <Space style={{ marginBottom: 16 }}>
+                          <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => setShowExpenseForm(!showExpenseForm)}
+                          >
+                            {showExpenseForm ? '取消' : '手动添加费用'}
+                          </Button>
+                          
+                          {/* 语音录入按钮 */}
+                          {id && (
+                            <VoiceExpenseRecorder
+                              planId={id}
+                              onExpenseCreated={handleAddExpense}
+                            />
+                          )}
+                        </Space>
+
+                        {/* 费用录入表单 */}
+                        {showExpenseForm && id && (
+                          <Card style={{ marginBottom: 16 }} title="手动添加费用">
+                            <ExpenseForm
+                              planId={id}
+                              onSubmit={handleAddExpense}
+                              onCancel={() => setShowExpenseForm(false)}
+                              loading={expenseLoading}
+                            />
+                          </Card>
+                        )}
+                      </div>
+
+                      {/* 费用列表 */}
+                      <Card title="费用记录">
+                        <ExpenseList
+                          expenses={expenses}
+                          loading={expenseLoading}
+                          onDelete={handleDeleteExpense}
+                        />
+                      </Card>
+                    </Space>
                   </div>
                 ),
               },

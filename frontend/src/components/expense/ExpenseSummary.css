@@ -1,0 +1,31 @@
+.expense-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-overview-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.category-breakdown-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.category-item {
+  padding: 8px 0;
+}
+
+.category-item:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .expense-summary-container .ant-col {
+    margin-bottom: 16px;
+  }
+}

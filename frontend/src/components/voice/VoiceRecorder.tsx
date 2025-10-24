@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button, Progress, message } from 'antd';
 import { AudioOutlined, LoadingOutlined } from '@ant-design/icons';
 import { voiceService } from '../../services/voice/iflytek';
@@ -7,18 +7,19 @@ import './VoiceRecorder.css';
 interface VoiceRecorderProps {
   onTranscriptComplete?: (text: string) => void;
   onError?: (error: Error) => void;
+  tips?: string[]; // 自定义提示内容
 }
 
 type RecordingState = 'idle' | 'recording' | 'processing' | 'completed';
 
-export function VoiceRecorder({ onTranscriptComplete, onError }: VoiceRecorderProps) {
+export function VoiceRecorder({ onTranscriptComplete, onError, tips }: VoiceRecorderProps) {
   const [state, setState] = useState<RecordingState>('idle');
   const [duration, setDuration] = useState(0);
   const [audioLevel, setAudioLevel] = useState(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
@@ -216,8 +217,14 @@ export function VoiceRecorder({ onTranscriptComplete, onError }: VoiceRecorderPr
         <p>💡 提示：</p>
         <ul>
           <li>请在安静的环境中录音</li>
-          <li>清晰地说出目的地、日期、预算和人数</li>
-          <li>录音时长建议在10-30秒</li>
+          {tips ? (
+            tips.map((tip, index) => <li key={index}>{tip}</li>)
+          ) : (
+            <>
+              <li>清晰地说出目的地、日期、预算和人数</li>
+              <li>录音时长建议在10-30秒</li>
+            </>
+          )}
         </ul>
       </div>
     </div>
