@@ -32,7 +32,6 @@ export async function saveTravelPlan(
         days: plan.days,
         budget: plan.budget,
         traveler_count: plan.travelerCount,
-        status: plan.status || 'draft',
         description: plan.description,
       })
       .select()
@@ -120,7 +119,6 @@ export async function getUserTravelPlans(): Promise<{
       days: item.days,
       budget: item.budget,
       traveler_count: item.traveler_count,
-      status: item.status,
       description: item.description,
       created_at: item.created_at,
       updated_at: item.updated_at,
@@ -186,7 +184,6 @@ export async function getTravelPlanById(planId: string): Promise<{
       days: planData.days,
       budget: planData.budget,
       traveler_count: planData.traveler_count,
-      status: planData.status,
       description: planData.description,
       created_at: planData.created_at,
       updated_at: planData.updated_at,
@@ -342,7 +339,6 @@ export async function updateTravelPlan(
     if (plan.days) updateData.days = plan.days;
     if (plan.budget !== undefined) updateData.budget = plan.budget;
     if (plan.travelerCount) updateData.traveler_count = plan.travelerCount;
-    if (plan.status) updateData.status = plan.status;
     if (plan.description) updateData.description = plan.description;
 
     const { error: planError } = await supabase

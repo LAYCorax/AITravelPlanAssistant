@@ -3,7 +3,7 @@
  * 使用阿里云百炼平台进行AI行程规划生成
  */
 
-import { TravelPlan, ItineraryDetail } from '@/types';
+import type { TravelPlan, ItineraryDetail } from '../../types';
 import { getDecryptedApiKey } from '../api/apiConfig';
 
 const LLM_BASE_URL = import.meta.env.VITE_LLM_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
@@ -477,18 +477,21 @@ function parseAIResponse(content: string): {
     // 验证并转换数据格式
     const plan: TravelPlan = {
       id: '', // 保存到数据库时会生成
-      userId: '', // 从当前用户获取
+      user_id: '', // 从当前用户获取
+      userId: '', // camelCase别名
       title: parsed.plan.title,
       destination: parsed.plan.destination,
+      start_date: parsed.plan.startDate,
+      end_date: parsed.plan.endDate,
       startDate: parsed.plan.startDate,
       endDate: parsed.plan.endDate,
       days: parsed.plan.days,
       budget: parsed.plan.budget,
+      traveler_count: parsed.plan.travelerCount,
       travelerCount: parsed.plan.travelerCount,
-      status: 'draft',
       description: parsed.plan.description,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const itinerary: ItineraryDetail[] = parsed.itinerary.map((day: any) => ({

@@ -1,6 +1,6 @@
 .plan-detail-page {
   padding: 24px;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -13,6 +13,58 @@
 
 .plan-header-card {
   margin-bottom: 24px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 两栏布局容器 */
+.plan-detail-content {
+  display: flex;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+/* 左侧地图栏 - 主要组件，更大的空间 */
+.map-column {
+  flex: 0 0 55%;
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+}
+
+.map-card {
+  height: 100%;
+  border: 2px solid #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.map-card .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  font-weight: 600;
+}
+
+.map-card .ant-card-head-title {
+  color: white;
+  font-size: 16px;
+}
+
+.map-card .ant-card-body {
+  padding: 0;
+  height: calc(100% - 57px);
+  overflow: hidden;
+}
+
+/* 右侧内容栏 - 辅助内容 */
+.content-column {
+  flex: 1;
+  min-width: 0;
 }
 
 .itinerary-section {
@@ -57,14 +109,57 @@
   background: #f0f2f5;
 }
 
+/* 平板和小屏设备 */
+@media (max-width: 1200px) {
+  .plan-detail-content {
+    flex-direction: column;
+  }
+
+  .map-column {
+    flex: 0 0 auto;
+    position: relative;
+    top: 0;
+    max-height: 500px;
+    width: 100%;
+  }
+
+  .content-column {
+    width: 100%;
+  }
+}
+
+/* 移动设备 */
 @media (max-width: 768px) {
   .plan-detail-page {
     padding: 16px;
+  }
+
+  .plan-header-card {
+    margin-bottom: 16px;
+  }
+
+  .plan-detail-content {
+    gap: 16px;
+  }
+
+  .map-column {
+    max-height: 400px;
   }
 
   .day-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+  .plan-detail-page {
+    padding: 12px;
+  }
+
+  .map-column {
+    max-height: 300px;
   }
 }

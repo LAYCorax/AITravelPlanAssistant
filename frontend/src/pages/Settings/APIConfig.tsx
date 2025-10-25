@@ -90,13 +90,20 @@ const serviceConfigs: ServiceConfig[] = [
       {
         name: 'api_key',
         label: 'API Key',
-        placeholder: '请输入地图服务的API密钥',
+        placeholder: '请输入地图服务的API密钥（Web端 Key）',
+        required: true,
+        type: 'password',
+      },
+      {
+        name: 'security_code',
+        label: '安全密钥（Security Code）',
+        placeholder: '请输入安全密钥（jscode）',
         required: true,
         type: 'password',
       },
     ],
-    helpText: '使用高德地图Web服务API。请前往高德开放平台注册并创建应用。',
-    helpLink: 'https://lbs.amap.com/api/javascript-api/summary',
+    helpText: '使用高德地图 JavaScript API 2.0。需要配置 Key 和安全密钥（jscode），两者都可以在高德开放平台控制台获取。',
+    helpLink: 'https://lbs.amap.com/api/javascript-api-v2/guide/abc/jscode',
   },
 ];
 
@@ -177,10 +184,18 @@ const APIConfig: React.FC = () => {
         additional_config: {},
       };
 
-      // 如果有app_id，添加到additional_config
+      // 如果有 app_id，添加到 additional_config
       if (values.app_id) {
         configInput.additional_config = {
           app_id: values.app_id,
+        };
+      }
+
+      // 如果是地图服务，需要保存安全密钥到 additional_config
+      if (serviceType === 'map' && values.security_code) {
+        configInput.additional_config = {
+          ...configInput.additional_config,
+          security_code: values.security_code,
         };
       }
 

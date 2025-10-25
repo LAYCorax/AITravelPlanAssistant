@@ -28,6 +28,7 @@ import {
   ClockCircleOutlined
 } from '@ant-design/icons';
 import type { ItineraryDetail, Activity } from '../../types';
+import { geocodeAddress } from '../../services/map/amap';
 import dayjs from 'dayjs';
 import './ItineraryEditor.css';
 
@@ -53,6 +54,7 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
     dayIndex: number;
   } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // 添加防抖标志
   const [form] = Form.useForm();
 
   // 打开编辑活动对话框
@@ -90,8 +92,35 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
         const newDayIndex = values.dayIndex; // 获取新的日期索引
         
         const time = `${values.startTime.format('HH:mm')}-${values.endTime.format('HH:mm')}`;
+        const oldActivity = newItinerary[oldDayIndex].activities[activityIndex];
+        
+        // 检查地址是否改变，如果改变则重新进行地理编码
+        const addressChanged = 
+          values.address !== oldActivity.address || 
+          values.location !== oldActivity.location;
+        
+        let coordinates = oldActivity.coordinates;
+        
+        if (addressChanged) {
+          const addressToGeocode = values.address || values.location;
+          if (addressToGeocode) {
+            try {
+              const geocodeResult = await geocodeAddress(addressToGeocode);
+              if (geocodeResult) {
+                coordinates = geocodeResult;
+                console.log(`[ItineraryEditor] 地理编码成功: ${addressToGeocode}`, coordinates);
+              } else {
+                console.warn(`[ItineraryEditor] 地理编码失败: ${addressToGeocode}`);
+                message.warning('无法获取新地点坐标，将保留原坐标');
+              }
+            } catch (error) {
+              console.error('[ItineraryEditor] 地理编码错误:', error);
+            }
+          }
+        }
+        
         const updatedActivity = {
-          ...newItinerary[oldDayIndex].activities[activityIndex],
+          ...oldActivity,
           time,
           type: values.type,
           name: values.name,
@@ -100,6 +129,7 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
           description: values.description,
           cost: Number(values.cost),
           tips: values.tips,
+          coordinates,
         };
         
         // 如果日期改变，需要移动活动到新的天
@@ -149,6 +179,26 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
         const newItinerary = [...editableItinerary];
         const { dayIndex } = isAddingActivity;
         const time = `${values.startTime.format('HH:mm')}-${values.endTime.format('HH:mm')}`;
+        
+        // 尝试地理编码获取坐标
+        let coordinates = { latitude: 0, longitude: 0 };
+        const addressToGeocode = values.address || values.location;
+        
+        if (addressToGeocode) {
+          try {
+            const geocodeResult = await geocodeAddress(addressToGeocode);
+            if (geocodeResult) {
+              coordinates = geocodeResult;
+              console.log(`[ItineraryEditor] 地理编码成功: ${addressToGeocode}`, coordinates);
+            } else {
+              console.warn(`[ItineraryEditor] 地理编码失败: ${addressToGeocode}，使用默认坐标`);
+              message.warning('无法获取地点坐标，地图显示可能不准确');
+            }
+          } catch (error) {
+            console.error('[ItineraryEditor] 地理编码错误:', error);
+          }
+        }
+        
         const newActivity: Activity = {
           time,
           type: values.type,
@@ -158,8 +208,9 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
           description: values.description,
           cost: Number(values.cost),
           tips: values.tips,
-          coordinates: { latitude: 0, longitude: 0 },
+          coordinates,
         };
+        
         newItinerary[dayIndex].activities.push(newActivity);
         // 自动按时间排序
         newItinerary[dayIndex].activities.sort((a, b) => {
@@ -187,14 +238,24 @@ export function ItineraryEditor({ itinerary, onSave, onCancel }: ItineraryEditor
 
   // 保存整个行程
   const handleSaveItinerary = async () => {
+    // 防抖：如果正在保存，忽略重复点击
+    if (isSaving || saving) {
+      console.log('[ItineraryEditor] 正在保存中，忽略重复请求');
+      return;
+    }
+    
+    setIsSaving(true);
     setSaving(true);
     try {
       await onSave(editableItinerary);
-      message.success('行程已保存');
+      // 不在这里显示成功消息，由父组件显示
+      // message.success('行程已保存');
     } catch (error: any) {
       message.error(error.message || '保存失败');
     } finally {
       setSaving(false);
+      // 延迟重置防抖标志，避免快速连续点击
+      setTimeout(() => setIsSaving(false), 1000);
     }
   };
 

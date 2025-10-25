@@ -18,7 +18,6 @@ import {
 import {
   ArrowLeftOutlined,
   EditOutlined,
-  ShareAltOutlined,
   CalendarOutlined,
   EnvironmentOutlined,
   ClockCircleOutlined,
@@ -61,7 +60,7 @@ export function PlanDetail() {
   const [loading, setLoading] = useState(true);
   const [plan, setPlan] = useState<TravelPlan | null>(null);
   const [itinerary, setItinerary] = useState<ItineraryDetail[]>([]);
-  const [activeTab, setActiveTab] = useState<'itinerary' | 'map' | 'expenses'>('itinerary');
+  const [activeTab, setActiveTab] = useState<'itinerary' | 'expenses'>('itinerary');
   const [mapConfigured, setMapConfigured] = useState(false);
   const [mapConfigMessage, setMapConfigMessage] = useState('');
   
@@ -87,6 +86,7 @@ export function PlanDetail() {
   useEffect(() => {
     if (id) {
       loadPlanDetail(id);
+      checkMapConfiguration();
     }
   }, [id]);
 
@@ -131,20 +131,11 @@ export function PlanDetail() {
 
   // 处理标签页切换
   const handleTabChange = async (key: string) => {
-    if (key === 'map') {
-      // 切换到地图展示时，检查地图API配置
-      const isConfigured = await checkMapConfiguration();
-      if (!isConfigured) {
-        message.warning({
-          content: '地图服务未配置。请前往【设置 → API配置】页面配置高德地图的API密钥。',
-          duration: 5,
-        });
-      }
-    } else if (key === 'expenses' && id) {
+    if (key === 'expenses' && id) {
       // 切换到费用管理时，加载费用数据
       await loadExpenses(id);
     }
-    setActiveTab(key as 'itinerary' | 'map' | 'expenses');
+    setActiveTab(key as 'itinerary' | 'expenses');
   };
 
   // 加载费用数据 - Week 7
@@ -221,18 +212,6 @@ export function PlanDetail() {
     }
   };
 
-  const getStatusTag = (status: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      draft: { color: 'default', text: '草稿' },
-      confirmed: { color: 'processing', text: '已确认' },
-      in_progress: { color: 'blue', text: '进行中' },
-      completed: { color: 'success', text: '已完成' },
-      cancelled: { color: 'error', text: '已取消' },
-    };
-    const { color, text } = statusMap[status] || statusMap.draft;
-    return <Tag color={color}>{text}</Tag>;
-  };
-
   // 将行程详情转换为地图位置
   const getMapLocations = (): Location[] => {
     const locations: Location[] = [];
@@ -241,7 +220,11 @@ export function PlanDetail() {
       // 添加活动地点
       if (day.activities && Array.isArray(day.activities)) {
         day.activities.forEach((activity: any) => {
-          if (activity.coordinates && activity.coordinates.latitude && activity.coordinates.longitude) {
+          // 验证坐标有效性：必须存在且不为 (0, 0)
+          if (activity.coordinates && 
+              activity.coordinates.latitude && 
+              activity.coordinates.longitude &&
+              (activity.coordinates.latitude !== 0 || activity.coordinates.longitude !== 0)) {
             locations.push({
               name: activity.name || '活动',
               address: activity.address || activity.location,
@@ -252,24 +235,30 @@ export function PlanDetail() {
               type: 'activity',
               description: activity.description,
             });
+          } else {
+            console.warn(`[PlanDetail] 活动 "${activity.name}" 坐标无效，已跳过:`, activity.coordinates);
           }
         });
       }
 
       // 添加住宿地点
       if (day.accommodation && day.accommodation.coordinates) {
-        locations.push({
-          name: day.accommodation.name || '住宿',
-          address: day.accommodation.address,
-          coordinates: {
-            latitude: day.accommodation.coordinates.latitude,
-            longitude: day.accommodation.coordinates.longitude,
-          },
-          type: 'accommodation',
-        });
+        // 验证坐标有效性
+        if ((day.accommodation.coordinates.latitude !== 0 || day.accommodation.coordinates.longitude !== 0)) {
+          locations.push({
+            name: day.accommodation.name || '住宿',
+            address: day.accommodation.address,
+            coordinates: {
+              latitude: day.accommodation.coordinates.latitude,
+              longitude: day.accommodation.coordinates.longitude,
+            },
+            type: 'accommodation',
+          });
+        }
       }
     });
 
+    console.log(`[PlanDetail] 有效地图位置: ${locations.length}个`, locations);
     return locations;
   };
 
@@ -301,22 +290,12 @@ export function PlanDetail() {
             >
               返回
             </Button>
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => navigate(`/plans/${id}/edit`)}
-            >
-              编辑
-            </Button>
-            <Button icon={<ShareAltOutlined />}>分享</Button>
           </Space>
 
           <div>
-            <Space align="start">
-              <Title level={2} style={{ margin: 0 }}>
-                {plan.title}
-              </Title>
-              {getStatusTag(plan.status)}
-            </Space>
+            <Title level={2} style={{ margin: 0 }}>
+              {plan.title}
+            </Title>
             {plan.description && (
               <Paragraph style={{ marginTop: 16, color: '#666' }}>
                 {plan.description}
@@ -360,177 +339,182 @@ export function PlanDetail() {
         </Space>
       </Card>
 
-      {/* Tabs for Itinerary, Map and Expenses */}
+      {/* Two-Column Layout: Map + Content */}
       {itinerary.length === 0 ? (
         <Card>
           <Empty description="暂无行程安排" />
         </Card>
       ) : (
-        <Card>
-          <Tabs
-            activeKey={activeTab}
-            onChange={handleTabChange}
-            items={[
-              {
-                key: 'itinerary',
-                label: (
-                  <span>
-                    <UnorderedListOutlined /> 行程详情
-                  </span>
-                ),
-                children: (
-                  <div style={{ marginTop: 16 }}>
-                    <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
-                      <Button
-                        type={isEditingItinerary ? 'default' : 'primary'}
-                        icon={<EditOutlined />}
-                        onClick={() => setIsEditingItinerary(!isEditingItinerary)}
-                      >
-                        {isEditingItinerary ? '取消编辑' : '编辑行程'}
-                      </Button>
-                    </Space>
-                    
-                    {isEditingItinerary ? (
-                      <ItineraryEditor
-                        itinerary={itinerary}
-                        onSave={handleSaveItinerary}
-                        onCancel={() => setIsEditingItinerary(false)}
-                      />
-                    ) : (
-                      <ItineraryView itinerary={itinerary} />
-                    )}
-                  </div>
-                ),
-              },
-              {
-                key: 'map',
-                label: (
-                  <span>
-                    <EnvironmentFilled /> 地图展示
-                  </span>
-                ),
-                children: (
-                  <div style={{ marginTop: 16 }}>
-                    {!mapConfigured && activeTab === 'map' && (
-                      <Alert
-                        message="地图服务未配置"
-                        description={
-                          <div>
-                            {mapConfigMessage}
-                            <br />
-                            <Button
-                              type="link"
-                              icon={<SettingOutlined />}
-                              onClick={() => navigate('/settings?tab=api')}
-                              style={{ paddingLeft: 0, marginTop: 8 }}
-                            >
-                              前往配置
-                            </Button>
-                          </div>
-                        }
-                        type="warning"
-                        showIcon
-                        closable
-                        style={{ marginBottom: 16 }}
-                      />
-                    )}
-                    <MapView
-                      locations={getMapLocations()}
-                      showRoutes={true}
-                      height="600px"
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: 'expenses',
-                label: (
-                  <span>
-                    <AccountBookOutlined /> 费用管理
-                  </span>
-                ),
-                children: (
-                  <div style={{ marginTop: 16 }}>
-                    <Space direction="vertical" style={{ width: '100%' }} size="large">
-                      {/* 预算预警 - Week 8 */}
-                      {expenseSummary.total > 0 && (
-                        <BudgetAlert 
-                          budget={plan?.budget || 0} 
-                          summary={expenseSummary}
-                        />
-                      )}
-                      
-                      {/* 费用统计 */}
-                      <ExpenseSummaryCard 
-                        budget={plan?.budget || 0} 
-                        summary={expenseSummary} 
-                      />
-                      
-                      {/* 费用图表可视化 - Week 8 */}
-                      {expenses.length > 0 && (
-                        <ExpenseCharts 
-                          summary={expenseSummary} 
-                          expenses={expenses}
-                        />
-                      )}
-                      
-                      {/* 添加费用按钮和方式切换 */}
-                      <div>
-                        <Space style={{ marginBottom: 16 }}>
+        <div className="plan-detail-content">
+          {/* Left Column: Map (Fixed) */}
+          <div className="map-column">
+            <Card 
+              className="map-card"
+              title={
+                <Space>
+                  <EnvironmentFilled />
+                  <span>地图展示</span>
+                </Space>
+              }
+              extra={
+                !mapConfigured && (
+                  <Button
+                    size="small"
+                    icon={<SettingOutlined />}
+                    onClick={() => navigate('/settings?tab=api')}
+                  >
+                    配置地图
+                  </Button>
+                )
+              }
+            >
+              {!mapConfigured && (
+                <Alert
+                  message="地图服务未配置"
+                  description={mapConfigMessage}
+                  type="warning"
+                  showIcon
+                  closable
+                  style={{ marginBottom: 16 }}
+                />
+              )}
+              <MapView
+                locations={getMapLocations()}
+                showRoutes={true}
+                height="calc(100vh - 320px)"
+              />
+            </Card>
+          </div>
+
+          {/* Right Column: Tabs for Itinerary and Expenses */}
+          <div className="content-column">
+            <Card>
+              <Tabs
+                activeKey={activeTab}
+                onChange={handleTabChange}
+                items={[
+                  {
+                    key: 'itinerary',
+                    label: (
+                      <span>
+                        <UnorderedListOutlined /> 行程详情
+                      </span>
+                    ),
+                    children: (
+                      <div style={{ marginTop: 16 }}>
+                        <Space direction="vertical" style={{ width: '100%', marginBottom: 16 }}>
                           <Button
-                            type="primary"
-                            icon={<PlusOutlined />}
-                            onClick={() => setShowExpenseForm(!showExpenseForm)}
+                            type={isEditingItinerary ? 'default' : 'primary'}
+                            icon={<EditOutlined />}
+                            onClick={() => setIsEditingItinerary(!isEditingItinerary)}
                           >
-                            {showExpenseForm ? '取消' : '手动添加费用'}
+                            {isEditingItinerary ? '取消编辑' : '编辑行程'}
                           </Button>
+                        </Space>
+                        
+                        {isEditingItinerary ? (
+                          <ItineraryEditor
+                            itinerary={itinerary}
+                            onSave={handleSaveItinerary}
+                            onCancel={() => setIsEditingItinerary(false)}
+                          />
+                        ) : (
+                          <ItineraryView itinerary={itinerary} />
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'expenses',
+                    label: (
+                      <span>
+                        <AccountBookOutlined /> 费用管理
+                      </span>
+                    ),
+                    children: (
+                      <div style={{ marginTop: 16 }}>
+                        <Space direction="vertical" style={{ width: '100%' }} size="large">
+                          {/* 预算预警 - Week 8 */}
+                          {expenseSummary.total > 0 && (
+                            <BudgetAlert 
+                              budget={plan?.budget || 0} 
+                              summary={expenseSummary}
+                            />
+                          )}
                           
-                          {/* 语音录入按钮 */}
-                          {id && (
-                            <VoiceExpenseRecorder
-                              planId={id}
-                              onExpenseCreated={handleAddExpense}
+                          {/* 费用统计 */}
+                          <ExpenseSummaryCard 
+                            budget={plan?.budget || 0} 
+                            summary={expenseSummary} 
+                          />
+                          
+                          {/* 费用图表可视化 - Week 8 */}
+                          {expenses.length > 0 && (
+                            <ExpenseCharts 
+                              summary={expenseSummary} 
+                              expenses={expenses}
+                            />
+                          )}
+                          
+                          {/* 添加费用按钮和方式切换 */}
+                          <div>
+                            <Space style={{ marginBottom: 16 }}>
+                              <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => setShowExpenseForm(!showExpenseForm)}
+                              >
+                                {showExpenseForm ? '取消' : '手动添加费用'}
+                              </Button>
+                              
+                              {/* 语音录入按钮 */}
+                              {id && (
+                                <VoiceExpenseRecorder
+                                  planId={id}
+                                  onExpenseCreated={handleAddExpense}
+                                />
+                              )}
+                            </Space>
+
+                            {/* 费用录入表单 */}
+                            {showExpenseForm && id && (
+                              <Card style={{ marginBottom: 16 }} title="手动添加费用">
+                                <ExpenseForm
+                                  planId={id}
+                                  onSubmit={handleAddExpense}
+                                  onCancel={() => setShowExpenseForm(false)}
+                                  loading={expenseLoading}
+                                />
+                              </Card>
+                            )}
+                          </div>
+
+                          {/* 费用列表 */}
+                          <Card title="费用记录">
+                            <ExpenseList
+                              expenses={expenses}
+                              loading={expenseLoading}
+                              onDelete={handleDeleteExpense}
+                            />
+                          </Card>
+
+                          {/* 支出分析报告 - Week 8 */}
+                          {plan && expenses.length > 0 && (
+                            <ExpenseReport
+                              plan={plan}
+                              summary={expenseSummary}
+                              expenses={expenses}
                             />
                           )}
                         </Space>
-
-                        {/* 费用录入表单 */}
-                        {showExpenseForm && id && (
-                          <Card style={{ marginBottom: 16 }} title="手动添加费用">
-                            <ExpenseForm
-                              planId={id}
-                              onSubmit={handleAddExpense}
-                              onCancel={() => setShowExpenseForm(false)}
-                              loading={expenseLoading}
-                            />
-                          </Card>
-                        )}
                       </div>
-
-                      {/* 费用列表 */}
-                      <Card title="费用记录">
-                        <ExpenseList
-                          expenses={expenses}
-                          loading={expenseLoading}
-                          onDelete={handleDeleteExpense}
-                        />
-                      </Card>
-
-                      {/* 支出分析报告 - Week 8 */}
-                      {plan && expenses.length > 0 && (
-                        <ExpenseReport
-                          plan={plan}
-                          summary={expenseSummary}
-                          expenses={expenses}
-                        />
-                      )}
-                    </Space>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </Card>
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,0 +1,55 @@
+/* 加载状态样式 */
+
+.loading-state-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 9999;
+}
+
+.loading-state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 40px 20px;
+}
+
+.inline-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-loading-tip {
+  margin-left: 4px;
+}
+
+.data-loading {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ant Design Spin 自定义样式 */
+.ant-spin-text {
+  margin-top: 8px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.ant-spin-lg .ant-spin-dot {
+  font-size: 48px;
+}
+
+.ant-spin-lg .ant-spin-text {
+  padding-top: 12px;
+  font-size: 16px;
+}

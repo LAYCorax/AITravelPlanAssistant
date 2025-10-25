@@ -1,0 +1,46 @@
+/* 空状态样式 */
+
+.empty-state-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 60px 20px;
+}
+
+.empty-state-content {
+  text-align: center;
+}
+
+.empty-state-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 8px;
+}
+
+.empty-state-description {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-bottom: 0;
+}
+
+/* Ant Design Empty 自定义 */
+.empty-state-container .ant-empty {
+  margin: 0;
+}
+
+.empty-state-container .ant-empty-image {
+  height: auto;
+  margin-bottom: 16px;
+}
+
+.empty-state-container .ant-empty-description {
+  margin-bottom: 24px;
+}
+
+.empty-state-container .ant-btn {
+  height: 40px;
+  padding: 0 24px;
+  font-size: 14px;
+}

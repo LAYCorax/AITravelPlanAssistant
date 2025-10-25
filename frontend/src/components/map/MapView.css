@@ -48,29 +48,263 @@
   white-space: nowrap;
 }
 
-/* 信息窗口样式 */
+/* 信息窗口样式 - 美化版 */
 :global(.map-info-window) {
-  padding: 12px;
-  min-width: 200px;
+  padding: 0;
+  min-width: 320px;
+  max-width: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+:global(.map-info-window) .info-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+:global(.map-info-window) .info-image-placeholder {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 48px;
+}
+
+:global(.map-info-window) .info-content {
+  padding: 16px;
+}
+
+:global(.map-info-window) .info-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 :global(.map-info-window) h4 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
+  margin: 0;
+  font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
+  flex: 1;
+  line-height: 1.4;
+}
+
+:global(.map-info-window) .type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #f0f5ff;
+  color: #1890ff;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+  white-space: nowrap;
 }
 
 :global(.map-info-window) .address {
-  margin: 4px 0;
+  display: flex;
+  align-items: flex-start;
+  margin: 8px 0;
   font-size: 13px;
-  color: #666;
+  color: #595959;
+  line-height: 1.6;
+}
+
+:global(.map-info-window) .address-icon {
+  margin-right: 6px;
+  margin-top: 2px;
+  color: #8c8c8c;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 :global(.map-info-window) .description {
-  margin: 4px 0 0 0;
-  font-size: 12px;
-  color: #999;
+  margin: 12px 0 0 0;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.6;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+:global(.map-info-window) .info-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  gap: 8px;
+}
+
+:global(.map-info-window) .navigate-btn {
+  flex: 1;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+:global(.map-info-window) .navigate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+:global(.map-info-window) .navigate-btn:active {
+  transform: translateY(0);
+}
+
+:global(.map-info-window) .close-btn {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  color: #595959;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+:global(.map-info-window) .close-btn:hover {
+  background: #e8e8e8;
+}
+
+/* 信息窗口加载状态 */
+:global(.map-info-window) .info-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180px;
+  background: #fafafa;
+}
+
+/* 自定义滚动条 */
+:global(.map-info-window) .description::-webkit-scrollbar {
+  width: 4px;
+}
+
+:global(.map-info-window) .description::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 2px;
+}
+
+:global(.map-info-window) .description::-webkit-scrollbar-thumb {
+  background: #bfbfbf;
+  border-radius: 2px;
+}
+
+:global(.map-info-window) .description::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* 高德地图信息窗口容器优化 */
+:global(.amap-info-content) {
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0 !important;
+  background: white;
+}
+
+:global(.amap-info-sharp) {
+  display: none; /* 隐藏默认的箭头 */
+}
+
+:global(.amap-info-close) {
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+:global(.amap-info-close):hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* 路线信息卡片 - 优化版 */
+.route-info-card {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+  min-width: 280px;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+/* 卡片内容区域 - 移除默认内边距，由内部div控制 */
+.route-info-card :global(.ant-card-body) {
+  padding: 0;
+}
+
+/* Space 组件项占满宽度 */
+.route-info-card :global(.ant-space-item) {
+  width: 100%;
+}
+
+/* 按钮样式优化 */
+.route-info-card :global(.ant-btn) {
+  height: 40px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+/* 图标大小 */
+.route-info-card :global(.anticon) {
+  font-size: 16px;
+}
+
+/* 地图统计徽章 */
+.map-stats-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 999;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 12px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* 路线规划加载提示 */
+.route-planning-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 998;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px 32px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* 高德地图UI优化 */

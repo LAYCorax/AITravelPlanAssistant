@@ -9,7 +9,6 @@ export interface TravelPlan {
   days: number;
   budget: number;
   traveler_count: number;
-  status: 'draft' | 'confirmed' | 'completed' | 'cancelled';
   input_method?: 'voice' | 'text';
   original_input?: string;
   ai_generated_content?: Record<string, any>;
@@ -37,6 +36,7 @@ export interface Activity {
   description: string;
   cost: number;
   tips?: string;
+  image_url?: string; // 地点特色图片URL（由AI在行程规划时生成）
 }
 
 export interface Accommodation {

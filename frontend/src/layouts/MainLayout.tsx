@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown } from 'antd';
 import {
@@ -10,6 +10,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../store/auth/AuthContext';
+import { getUserProfile } from '../services/api/userProfile';
 import './MainLayout.css';
 
 const { Header, Content, Sider } = Layout;
@@ -17,6 +18,25 @@ const { Header, Content, Sider } = Layout;
 export function MainLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+
+  // 加载用户头像
+  useEffect(() => {
+    const loadUserAvatar = async () => {
+      try {
+        const profile = await getUserProfile();
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        }
+      } catch (error) {
+        console.error('加载用户头像失败:', error);
+      }
+    };
+
+    if (user) {
+      loadUserAvatar();
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -74,8 +94,9 @@ export function MainLayout() {
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <Avatar
               size="large"
-              icon={<UserOutlined />}
-              style={{ cursor: 'pointer', backgroundColor: '#1890ff' }}
+              src={avatarUrl || undefined}
+              icon={!avatarUrl ? <UserOutlined /> : undefined}
+              style={{ cursor: 'pointer', backgroundColor: avatarUrl ? 'transparent' : '#1890ff' }}
             />
           </Dropdown>
         </div>

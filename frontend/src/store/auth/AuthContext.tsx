@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
-import { User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useReducer } from 'react';
+import type { ReactNode } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { authService } from '../../services/api/auth';
 import { supabase } from '../../services/supabase/client';
 import type { LoginCredentials, RegisterCredentials } from '../../types';
@@ -24,6 +25,7 @@ interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -178,11 +180,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'SET_ERROR', payload: null });
   };
 
+  // Refresh User
+  const refreshUser = async () => {
+    try {
+      const { data } = await authService.getCurrentUser();
+      dispatch({ type: 'SET_USER', payload: data });
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+    }
+  };
+
   const value: AuthContextType = {
     ...state,
     login,
     register,
     logout,
+    refreshUser,
     clearError,
   };
 

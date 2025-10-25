@@ -3,12 +3,13 @@
  * 地图服务集成
  */
 
-import { getDecryptedApiKey } from '../api/apiConfig';
+import { getDecryptedApiKey, getApiConfig } from '../api/apiConfig';
 
 // 高德地图JS API加载状态
 let amapLoaded = false;
 let amapLoadingPromise: Promise<void> | null = null;
 let cachedAmapKey: string | null = null;
+let cachedSecurityCode: string | null = null;
 
 /**
  * 坐标点类型
@@ -65,26 +66,41 @@ export async function loadAmapScript(): Promise<void> {
   amapLoadingPromise = new Promise(async (resolve, reject) => {
     console.log('[AMap] 开始加载地图API...');
     
-    // 从用户配置读取API密钥
+    // 从用户配置读取API密钥和安全密钥
     let amapKey = cachedAmapKey;
+    let securityCode = cachedSecurityCode;
     
-    if (!amapKey) {
+    if (!amapKey || !securityCode) {
       try {
-        console.log('[AMap] 从数据库读取API密钥...');
+        console.log('[AMap] 从数据库读取配置...');
+        
+        // 读取 API Key
         amapKey = await getDecryptedApiKey('map');
+        
+        // 读取完整配置以获取安全密钥
+        const mapConfig = await getApiConfig('map');
+        if (mapConfig && mapConfig.additional_config) {
+          securityCode = mapConfig.additional_config.security_code;
+        }
         
         if (amapKey) {
           console.log('[AMap] API密钥读取成功:', amapKey.substring(0, 8) + '...');
-          // 缓存密钥
           cachedAmapKey = amapKey;
         } else {
           console.warn('[AMap] 未能获取到API密钥');
+        }
+        
+        if (securityCode) {
+          console.log('[AMap] 安全密钥读取成功:', securityCode.substring(0, 8) + '...');
+          cachedSecurityCode = securityCode;
+        } else {
+          console.warn('[AMap] 未能获取到安全密钥');
         }
       } catch (error) {
         console.error('[AMap] 读取用户配置失败:', error);
       }
     } else {
-      console.log('[AMap] 使用缓存的API密钥');
+      console.log('[AMap] 使用缓存的密钥');
     }
     
     // 检查配置
@@ -94,6 +110,19 @@ export async function loadAmapScript(): Promise<void> {
       reject(new Error(errorMsg));
       return;
     }
+    
+    if (!securityCode) {
+      const errorMsg = '地图服务安全密钥未配置。请前往【设置 → API配置】页面配置高德地图的安全密钥（Security Code）。';
+      console.error('[AMap] ' + errorMsg);
+      reject(new Error(errorMsg));
+      return;
+    }
+
+    // 设置安全密钥（必须在加载地图JS之前设置）
+    window._AMapSecurityConfig = {
+      securityJsCode: securityCode,
+    };
+    console.log('[AMap] 安全密钥已配置');
 
     // 创建script标签
     const script = document.createElement('script');
@@ -176,7 +205,7 @@ export async function geocodeAddress(address: string): Promise<Coordinate | null
   try {
     await loadAmapScript();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const geocoder = new window.AMap.Geocoder({
         city: '全国', // 全国范围内进行地理编码
       });
@@ -206,7 +235,7 @@ export async function reverseGeocode(coordinate: Coordinate): Promise<string | n
   try {
     await loadAmapScript();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const geocoder = new window.AMap.Geocoder();
       const lnglat = [coordinate.longitude, coordinate.latitude];
 
@@ -225,26 +254,46 @@ export async function reverseGeocode(coordinate: Coordinate): Promise<string | n
 }
 
 /**
- * 路线规划 - 驾车路线
+ * 路线规划 - 驾车路线（两点）
  */
 export async function planDrivingRoute(
   start: Coordinate,
   end: Coordinate
 ): Promise<RouteResult | null> {
   try {
+    console.log('[AMap] 规划路线:', {
+      start: [start.longitude, start.latitude],
+      end: [end.longitude, end.latitude]
+    });
+
     await loadAmapScript();
 
-    return new Promise((resolve, reject) => {
+    // 检查Driving插件是否可用
+    if (!window.AMap || !window.AMap.Driving) {
+      console.error('[AMap] Driving插件未加载');
+      return null;
+    }
+
+    return new Promise((resolve) => {
       const driving = new window.AMap.Driving({
         policy: window.AMap.DrivingPolicy.LEAST_TIME, // 最快捷模式
+        extensions: 'base', // 返回基本信息
       });
 
-      const startLngLat = new window.AMap.LngLat(start.longitude, start.latitude);
-      const endLngLat = new window.AMap.LngLat(end.longitude, end.latitude);
+      // 使用数组格式：[经度, 纬度]，这是官方文档推荐的格式
+      const startLngLat = [start.longitude, start.latitude];
+      const endLngLat = [end.longitude, end.latitude];
+
+      console.log('[AMap] 使用数组格式坐标 - 起点:', startLngLat, '终点:', endLngLat);
 
       driving.search(startLngLat, endLngLat, (status: string, result: any) => {
+        console.log('[AMap] 路线搜索回调 - status:', status);
+        console.log('[AMap] 完整result对象:', JSON.stringify(result, null, 2));
+        
         if (status === 'complete' && result.routes && result.routes.length > 0) {
           const route = result.routes[0];
+          
+          console.log('[AMap] 路线规划成功，距离:', route.distance, '米，时间:', route.time, '秒');
           
           resolve({
             distance: route.distance,
@@ -260,14 +309,219 @@ export async function planDrivingRoute(
             })),
           });
         } else {
+          console.error('[AMap] 路线规划失败 - status:', status);
+          console.error('[AMap] 完整错误信息:', result);
+          if (result && result.info) {
+            console.error('[AMap] 错误描述:', result.info);
+            console.error('[AMap] 错误代码:', result.infocode);
+          }
           resolve(null);
         }
       });
     });
   } catch (error) {
-    console.error('路线规划失败:', error);
+    console.error('[AMap] 路线规划异常:', error);
     return null;
   }
+}
+
+/**
+ * 多点路线规划结果
+ */
+export interface MultiRouteResult {
+  totalDistance: number; // 总距离（米）
+  totalDuration: number; // 总时长（秒）
+  routes: RouteResult[]; // 每段路线
+}
+
+/**
+ * 延迟函数（用于避免并发请求限制）
+ */
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * 路线规划 - 多点驾车路线（使用途经点功能，一次请求完成）
+ * @param waypoints 途径点数组（至少2个点，最多支持16个途经点）
+ * @returns 路线规划结果
+ */
+export async function planMultiPointRouteWithWaypoints(
+  waypoints: Coordinate[]
+): Promise<MultiRouteResult | null> {
+  try {
+    if (waypoints.length < 2) {
+      console.error('[AMap] 路径点至少需要2个，实际:', waypoints.length);
+      return null;
+    }
+
+    if (waypoints.length > 18) {
+      console.error('[AMap] 路径点最多支持18个（起点+16个途经点+终点），实际:', waypoints.length);
+      return null;
+    }
+
+    console.log('[AMap] 开始多点路线规划（途经点模式），路径点数:', waypoints.length);
+
+    await loadAmapScript();
+
+    return new Promise((resolve) => {
+      const driving = new window.AMap.Driving({
+        policy: window.AMap.DrivingPolicy.LEAST_TIME,
+        extensions: 'base',
+      });
+
+      const startLngLat = [waypoints[0].longitude, waypoints[0].latitude];
+      const endLngLat = [waypoints[waypoints.length - 1].longitude, waypoints[waypoints.length - 1].latitude];
+      
+      // 中间点作为途经点
+      const waypointsLngLat = waypoints.slice(1, -1).map(wp => [wp.longitude, wp.latitude]);
+
+      console.log('[AMap] 起点:', startLngLat);
+      console.log('[AMap] 途经点:', waypointsLngLat);
+      console.log('[AMap] 终点:', endLngLat);
+
+      const opts = {
+        waypoints: waypointsLngLat,
+      };
+
+      driving.search(startLngLat, endLngLat, opts, (status: string, result: any) => {
+        console.log('[AMap] 多点路线搜索回调 - status:', status);
+        
+        if (status === 'complete' && result.routes && result.routes.length > 0) {
+          const route = result.routes[0];
+          console.log('[AMap] 多点路线规划成功，总距离:', route.distance, '米，总时长:', route.time, '秒');
+          
+          resolve({
+            totalDistance: route.distance,
+            totalDuration: route.time,
+            routes: [{
+              distance: route.distance,
+              duration: route.time,
+              steps: route.steps.map((step: any) => ({
+                instruction: step.instruction,
+                distance: step.distance,
+                duration: step.time,
+                path: step.path.map((p: any) => ({
+                  longitude: p.lng,
+                  latitude: p.lat,
+                })),
+              })),
+            }],
+          });
+        } else {
+          console.error('[AMap] 多点路线规划失败 - status:', status);
+          console.error('[AMap] 完整错误信息:', result);
+          if (result && result.info) {
+            console.error('[AMap] 错误描述:', result.info);
+            console.error('[AMap] 错误代码:', result.infocode);
+          }
+          resolve(null);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('[AMap] 多点路线规划异常:', error);
+    return null;
+  }
+}
+
+/**
+ * 路线规划 - 多点驾车路线（分段模式，适合超过16个途经点的情况）
+ * @param waypoints 途径点数组（至少2个点）
+ * @returns 多段路线规划结果
+ */
+export async function planMultiPointRoute(
+  waypoints: Coordinate[]
+): Promise<MultiRouteResult | null> {
+  try {
+    if (waypoints.length < 2) {
+      console.error('[AMap] 路径点至少需要2个，实际:', waypoints.length);
+      return null;
+    }
+
+    // 如果点数少于等于18个，使用途经点模式（一次请求完成）
+    if (waypoints.length <= 18) {
+      console.log('[AMap] 使用途经点模式规划路线');
+      return await planMultiPointRouteWithWaypoints(waypoints);
+    }
+
+    // 超过18个点，使用分段模式
+    console.log('[AMap] 点数超过18个，使用分段模式规划路线');
+    console.log('[AMap] 开始多点路线规划（分段模式），路径点数:', waypoints.length);
+    console.log('[AMap] 路径点坐标:', waypoints);
+
+    await loadAmapScript();
+
+    const routes: RouteResult[] = [];
+    let totalDistance = 0;
+    let totalDuration = 0;
+
+    // 依次规划每两个点之间的路线（添加延迟避免并发限制）
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      console.log(`[AMap] 规划第 ${i + 1}/${waypoints.length - 1} 段路线`);
+      
+      // 如果不是第一次请求，等待一段时间避免并发限制
+      if (i > 0) {
+        console.log('[AMap] 等待500ms避免并发请求限制...');
+        await delay(500); // 等待500毫秒
+      }
+      
+      const routeResult = await planDrivingRoute(waypoints[i], waypoints[i + 1]);
+      
+      if (routeResult) {
+        routes.push(routeResult);
+        totalDistance += routeResult.distance;
+        totalDuration += routeResult.duration;
+        console.log(`[AMap] 第 ${i + 1} 段路线成功，距离: ${routeResult.distance}米`);
+      } else {
+        console.error(`[AMap] 第 ${i + 1} 段路线规划失败，起点:`, waypoints[i], '终点:', waypoints[i + 1]);
+        // 不要立即返回null，继续尝试下一段
+        console.warn(`[AMap] 跳过第 ${i + 1} 段，继续规划剩余路线`);
+      }
+    }
+
+    // 如果所有路线都失败了
+    if (routes.length === 0) {
+      console.error('[AMap] 所有路线段都规划失败');
+      return null;
+    }
+
+    console.log('[AMap] 多点路线规划完成，总距离:', totalDistance, '米，总时长:', totalDuration, '秒');
+    console.log('[AMap] 成功规划路线段数:', routes.length, '/', waypoints.length - 1);
+
+    return {
+      totalDistance,
+      totalDuration,
+      routes,
+    };
+  } catch (error) {
+    console.error('[AMap] 多点路线规划异常:', error);
+    return null;
+  }
+}
+
+/**
+ * 生成导航URL - 跳转到高德地图APP
+ * @param destination 目的地坐标
+ * @param destinationName 目的地名称
+ * @param origin 起点坐标（可选）
+ * @returns 高德地图导航URL
+ */
+export function generateNavigationUrl(
+  destination: Coordinate,
+  destinationName: string,
+  origin?: Coordinate
+): string {
+  const destParam = `${destination.longitude},${destination.latitude}`;
+  let url = `https://uri.amap.com/navigation?to=${destParam},${encodeURIComponent(destinationName)}`;
+  
+  if (origin) {
+    const originParam = `${origin.longitude},${origin.latitude}`;
+    url += `&from=${originParam}`;
+  }
+  
+  // 默认驾车导航
+  url += '&mode=car&policy=1&src=myapp&coordinate=gaode&callnative=1';
+  
+  return url;
 }
 
 /**
@@ -281,7 +535,7 @@ export async function searchNearby(
   try {
     await loadAmapScript();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const placeSearch = new window.AMap.PlaceSearch({
         type: keyword, // 兴趣点类别
         pageSize: 10,
