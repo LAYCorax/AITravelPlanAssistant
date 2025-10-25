@@ -113,10 +113,49 @@ AITravelPlanAssistant/
 ├── docs/                    # 文档
 │   ├── *.sql               # 数据库脚本
 │   └── *.md                # 技术文档
+├── Dockerfile              # Docker镜像构建文件
+├── docker-compose.yml      # Docker Compose配置
+├── nginx.conf              # Nginx配置
 ├── PRD.md                  # 产品需求文档
 ├── USER_GUIDE.md           # 用户指南
+├── PROJECT_SUMMARY.md      # 项目总结
+├── DOCKER_DEPLOYMENT.md    # Docker部署指南
 └── README.md               # 项目说明
 ```
+
+## 📦 部署
+
+### 🐳 Docker部署(推荐)
+
+快速使用Docker容器化部署:
+
+```bash
+# 使用Docker Compose
+docker-compose up -d
+
+# 或使用Docker直接运行
+docker build -t ai-travel-planner:latest .
+docker run -d -p 80:80 --name ai-travel-planner ai-travel-planner:latest
+```
+
+**详细说明请查看:** [Docker部署指南](DOCKER_DEPLOYMENT.md)
+
+### ☁️ 云平台部署
+
+推荐使用 Vercel、Netlify 或 Cloudflare Pages 进行部署。
+
+**步骤：**
+1. 将代码推送到 GitHub
+2. 在部署平台连接仓库
+3. 配置构建命令：`cd frontend && npm run build`
+4. 配置输出目录：`frontend/dist`
+5. 添加环境变量（Supabase URL 和 Key）
+
+### 数据库初始化
+
+在 Supabase 控制台执行 `docs/` 目录下的 SQL 脚本。
+
+---
 
 ## 🤝 贡献
 

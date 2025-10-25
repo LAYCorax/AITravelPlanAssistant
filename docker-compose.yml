@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-travel-planner-frontend
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - ai-travel-network
+    labels:
+      - "com.ai-travel-planner.description=AI Travel Planner Frontend"
+
+networks:
+  ai-travel-network:
+    driver: bridge
