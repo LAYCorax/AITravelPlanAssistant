@@ -1,5 +1,5 @@
 import { supabase } from './client';
-import type { User, UserProfile } from '../../types';
+import type { UserProfile } from '../../types';
 
 export const databaseService = {
   // User Profile operations

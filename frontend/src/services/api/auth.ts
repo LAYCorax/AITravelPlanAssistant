@@ -1,6 +1,6 @@
 import { supabase } from '../supabase/client';
 import { databaseService } from '../supabase/database';
-import type { LoginCredentials, RegisterCredentials, User } from '../../types';
+import type { LoginCredentials, RegisterCredentials } from '../../types';
 
 export const authService = {
   /**
